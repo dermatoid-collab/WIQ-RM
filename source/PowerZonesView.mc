@@ -481,7 +481,16 @@ class PowerZonesView extends WatchUi.DataField {
             dc.fillRectangle(x, y, cw, ch);
             fg = Graphics.COLOR_BLACK;
         }
+        // Label: largest of SMALL/TINY/XTINY that uses at most ~40% of the cell
         var lf = Graphics.FONT_XTINY;
+        var labelFonts = [Graphics.FONT_SMALL, Graphics.FONT_TINY];
+        for (var i = 0; i < labelFonts.size(); i++) {
+            if (dc.getFontHeight(labelFonts[i]) * 10 <= ch * 4 &&
+                dc.getTextWidthInPixels(label, labelFonts[i]) <= cw - 4) {
+                lf = labelFonts[i];
+                break;
+            }
+        }
         var lh = dc.getFontHeight(lf);
         var cx = x + cw / 2;
         dc.setColor(fg, Graphics.COLOR_TRANSPARENT);
@@ -490,8 +499,8 @@ class PowerZonesView extends WatchUi.DataField {
         var avail = ch - lh + 4;
         var vf = null;
         if (isNumeric(value)) {
-            for (var i = 0; i < mNumFonts.size(); i++) {
-                var nf = mNumFonts[i];
+            for (var k = 0; k < mNumFonts.size(); k++) {
+                var nf = mNumFonts[k];
                 if (dc.getFontHeight(nf) <= avail && dc.getTextWidthInPixels(value, nf) <= cw - 4) {
                     vf = nf;
                     break;
