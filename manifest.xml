@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <iq:manifest version="3" xmlns:iq="http://www.garmin.com/xml/connectiq">
-    <iq:application id="9a3fc884a67c4d56b104dc0ac0005aab" type="datafield" name="@Strings.AppName" entry="PowerZonesApp" launcherIcon="@Drawables.LauncherIcon" minApiVersion="3.0.0">
+    <iq:application id="9a3fc884a67c4d56b104dc0ac0005aab" type="datafield" name="@Strings.AppName" entry="PowerZonesApp" launcherIcon="@Drawables.LauncherIcon" minApiLevel="3.0.0">
         <iq:products>
             <iq:product id="edge530"/>
             <iq:product id="edge540"/>
