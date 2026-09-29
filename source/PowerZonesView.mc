@@ -72,7 +72,11 @@ class PowerZonesView extends WatchUi.DataField {
     var mDark = false;
     var mFull = false;
     var mShowTimes = false; // bottom strip: false = NP/Avg/Pwr 3s, true = SS/Z4/Z4+
-    var mNumFonts = [Graphics.FONT_NUMBER_MEDIUM, Graphics.FONT_NUMBER_MILD];
+    // Value fonts, largest first: number fonts (digits and ':' only) then text fonts
+    var mValueFonts = [Graphics.FONT_NUMBER_MEDIUM, Graphics.FONT_NUMBER_MILD,
+                       Graphics.FONT_MEDIUM, Graphics.FONT_SMALL, Graphics.FONT_TINY, Graphics.FONT_XTINY];
+    var mTimeFontIdx = 0;   // index in mValueFonts used for zone times (and max for cells)
+    var mZoneLabelFont = Graphics.FONT_MEDIUM;
     var mFonts = [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL, Graphics.FONT_TINY, Graphics.FONT_XTINY];
 
     var mStrNp;
@@ -296,6 +300,9 @@ class PowerZonesView extends WatchUi.DataField {
         var h = s / 3600;
         var m = (s % 3600) / 60;
         s = s % 60;
+        if (h == 0) {
+            return m.format("%d") + ":" + s.format("%02d");
+        }
         return h.format("%d") + ":" + m.format("%02d") + ":" + s.format("%02d");
     }
 
@@ -336,6 +343,29 @@ class PowerZonesView extends WatchUi.DataField {
 
     // ------------------------------------------------------------------ drawing
 
+    // Font metrics: baseline position and height of capitals/digits.
+    // Garmin fonts carry empty space above and below the glyphs; laying out
+    // on baselines instead of getFontHeight() recovers that space.
+    function fontAsc(dc, f) {
+        if (Graphics has :getFontAscent) {
+            return Graphics.getFontAscent(f);
+        }
+        return (dc.getFontHeight(f) * 80) / 100;
+    }
+
+    function fontCap(dc, f) {
+        return (fontAsc(dc, f) * 78) / 100;
+    }
+
+    function isNumberFont(f) {
+        return f == Graphics.FONT_NUMBER_MEDIUM || f == Graphics.FONT_NUMBER_MILD;
+    }
+
+    // Draw text with its baseline at yb
+    function drawBase(dc, x, yb, f, text, just) {
+        dc.drawText(x, yb - fontAsc(dc, f), f, text, just);
+    }
+
     function onUpdate(dc) {
         var w = dc.getWidth();
         var h = dc.getHeight();
@@ -348,12 +378,34 @@ class PowerZonesView extends WatchUi.DataField {
 
         mFull = (h >= 240);
         if (mFull) {
-            // Full page: 7 zone rows + one strip of 3 cells (tap toggles the set)
-            var stripH = (h * 14) / 100;
-            var rowH = (h - stripH) / NUM_ZONES;
+            // Full page: 7 zone rows + one strip of 3 cells (tap toggles the set).
+            // Pick the largest time font such that both the strip (label TINY +
+            // value) and the 7 two-line rows (time line + range line) fit.
+            var capL = fontCap(dc, Graphics.FONT_TINY);
+            var capS = fontCap(dc, Graphics.FONT_XTINY);
+            var stripH = 0;
+            var rowH = 0;
+            for (var i = 0; i < mValueFonts.size(); i++) {
+                var capN = fontCap(dc, mValueFonts[i]);
+                stripH = capL + capN + 14;
+                rowH = (h - stripH) / NUM_ZONES;
+                mTimeFontIdx = i;
+                if (capN + capS + 8 <= rowH) {
+                    break;
+                }
+            }
+            // Zone label: largest text font whose capitals fit the top line
+            var labelFonts = [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL, Graphics.FONT_TINY];
+            mZoneLabelFont = Graphics.FONT_XTINY;
+            for (var k = 0; k < labelFonts.size(); k++) {
+                if (fontCap(dc, labelFonts[k]) + capS + 8 <= rowH) {
+                    mZoneLabelFont = labelFonts[k];
+                    break;
+                }
+            }
             var zonesH = rowH * NUM_ZONES;
-            for (var i = 0; i < NUM_ZONES; i++) {
-                drawZoneRow(dc, NUM_ZONES - 1 - i, 0, i * rowH, w, rowH);
+            for (var j = 0; j < NUM_ZONES; j++) {
+                drawZoneRow(dc, NUM_ZONES - 1 - j, 0, j * rowH, w, rowH);
             }
             if (mShowTimes) {
                 drawSummary(dc, 0, zonesH, w, h - zonesH);
@@ -361,6 +413,7 @@ class PowerZonesView extends WatchUi.DataField {
                 drawFooter(dc, 0, zonesH, w, h - zonesH);
             }
         } else if (h >= 90) {
+            mTimeFontIdx = 0;
             var half = h / 2;
             drawSummary(dc, 0, 0, w, half);
             drawFooter(dc, 0, half, w, h - half);
@@ -405,36 +458,27 @@ class PowerZonesView extends WatchUi.DataField {
         var right = x + w - 6;
 
         // Two lines, like the reference field:
-        //   "Z3 0:12:34"          (large)
-        //   "224 - 268W      21%" (small)
-        // Garmin fonts carry empty space above the glyphs, so the large line
-        // may use ~20% more height than what is left above the small line.
+        //   "Z3 12:34"            (label text font + time number font)
+        //   "224 - 268W      21%" (XTINY)
         var sf = Graphics.FONT_XTINY;
-        var sh = dc.getFontHeight(sf);
-        var y2 = y + rh - sh;
-        var f = Graphics.FONT_XTINY;
-        for (var i = 0; i < mFonts.size(); i++) {
-            var fh = dc.getFontHeight(mFonts[i]);
-            if ((fh * 80) / 100 <= rh - sh + 2 &&
-                dc.getTextWidthInPixels(label + " 0:00:00", mFonts[i]) <= right - tx) {
-                f = mFonts[i];
-                break;
-            }
-        }
-        var fh1 = dc.getFontHeight(f);
-        var y1 = y2 - (fh1 * 80) / 100;
-        if (y1 < y - fh1 / 5) {
-            y1 = y - fh1 / 5;
-        }
+        var smallBase = y + rh - 3;
+        var topBase = smallBase - fontCap(dc, sf) - 5;
 
         dc.setColor(mFg, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(tx, y1, f, timeStr.length() > 0 ? label + " " + timeStr : label, Graphics.TEXT_JUSTIFY_LEFT);
-        dc.drawText(tx, y2, sf, range, Graphics.TEXT_JUSTIFY_LEFT);
-        dc.drawText(right, y2, sf, pctStr, Graphics.TEXT_JUSTIFY_RIGHT);
+        drawBase(dc, tx, topBase, mZoneLabelFont, label, Graphics.TEXT_JUSTIFY_LEFT);
+        if (timeStr.length() > 0) {
+            var tf = mValueFonts[mTimeFontIdx];
+            if (!isNumeric(timeStr) && isNumberFont(tf)) {
+                tf = Graphics.FONT_MEDIUM;
+            }
+            drawBase(dc, tx + dc.getTextWidthInPixels(label, mZoneLabelFont) + 8, topBase, tf, timeStr, Graphics.TEXT_JUSTIFY_LEFT);
+        }
+        drawBase(dc, tx, smallBase, sf, range, Graphics.TEXT_JUSTIFY_LEFT);
+        drawBase(dc, right, smallBase, sf, pctStr, Graphics.TEXT_JUSTIFY_RIGHT);
 
         // Before the first second of data, show which build is installed
         if (z == 6 && mTotalMs == 0) {
-            dc.drawText(right, y + 2, sf, "build " + BUILD_NUMBER, Graphics.TEXT_JUSTIFY_RIGHT);
+            drawBase(dc, right, topBase, sf, "build " + BUILD_NUMBER, Graphics.TEXT_JUSTIFY_RIGHT);
         }
 
         if (z == mCurZone) {
@@ -486,38 +530,32 @@ class PowerZonesView extends WatchUi.DataField {
             dc.fillRectangle(x, y, cw, ch);
             fg = Graphics.COLOR_BLACK;
         }
-        // Label: largest of SMALL/TINY/XTINY that uses at most ~40% of the cell
-        var lf = Graphics.FONT_XTINY;
-        var labelFonts = [Graphics.FONT_SMALL, Graphics.FONT_TINY];
-        for (var i = 0; i < labelFonts.size(); i++) {
-            if (dc.getFontHeight(labelFonts[i]) * 10 <= ch * 4 &&
-                dc.getTextWidthInPixels(label, labelFonts[i]) <= cw - 4) {
-                lf = labelFonts[i];
+        var cx = x + cw / 2;
+        dc.setColor(fg, Graphics.COLOR_TRANSPARENT);
+
+        // Label: TINY (XTINY if it does not fit), capitals 3 px from the top
+        var lf = Graphics.FONT_TINY;
+        if (dc.getTextWidthInPixels(label, lf) > cw - 4 || fontCap(dc, lf) * 3 > ch) {
+            lf = Graphics.FONT_XTINY;
+        }
+        var capL = fontCap(dc, lf);
+        drawBase(dc, cx, y + 3 + capL, lf, label, Graphics.TEXT_JUSTIFY_CENTER);
+
+        // Value: largest font not bigger than the zone time font that fits
+        var capMax = ch - capL - 12;
+        var numeric = isNumeric(value);
+        var vf = Graphics.FONT_XTINY;
+        for (var i = mTimeFontIdx; i < mValueFonts.size(); i++) {
+            var f = mValueFonts[i];
+            if (isNumberFont(f) && !numeric) {
+                continue;
+            }
+            if (fontCap(dc, f) <= capMax && dc.getTextWidthInPixels(value, f) <= cw - 4) {
+                vf = f;
                 break;
             }
         }
-        var lh = dc.getFontHeight(lf);
-        var cx = x + cw / 2;
-        dc.setColor(fg, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, y, lf, label, Graphics.TEXT_JUSTIFY_CENTER);
-
-        var avail = ch - lh + 4;
-        var vf = null;
-        if (isNumeric(value)) {
-            for (var k = 0; k < mNumFonts.size(); k++) {
-                var nf = mNumFonts[k];
-                if (dc.getFontHeight(nf) <= avail && dc.getTextWidthInPixels(value, nf) <= cw - 4) {
-                    vf = nf;
-                    break;
-                }
-            }
-        }
-        if (vf == null) {
-            vf = pickFont(dc, value, cw - 4, avail);
-        }
-        var vh = dc.getFontHeight(vf);
-        var vy = y + lh - 2 + (avail - vh) / 2;
-        dc.drawText(cx, vy, vf, value, Graphics.TEXT_JUSTIFY_CENTER);
+        drawBase(dc, cx, y + ch - 5, vf, value, Graphics.TEXT_JUSTIFY_CENTER);
 
         dc.setColor(mFg, Graphics.COLOR_TRANSPARENT);
         dc.drawRectangle(x, y, cw, ch);

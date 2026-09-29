@@ -62,18 +62,3 @@ jobs:
           path: |
             bin/*.prg
             bin/*.iq
-
-      - name: Device font info
-        run: |
-          python3 - <<'PY' || true
-          import json, os
-          for d in ["edge830", "edge840"]:
-              base = os.path.expanduser("~/.Garmin/ConnectIQ/Devices/" + d)
-              j = json.load(open(base + "/simulator.json"))
-              print("==", d, "keys:", list(j.keys()))
-              for k, v in j.items():
-                  if "font" in k.lower():
-                      print(k, "=", json.dumps(v)[:3000])
-              c = json.load(open(base + "/compiler.json"))
-              print("compiler keys:", list(c.keys()))
-          PY
