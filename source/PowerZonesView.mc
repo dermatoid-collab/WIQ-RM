@@ -378,22 +378,41 @@ class PowerZonesView extends WatchUi.DataField {
 
     // ------------------------------------------------------------------ drawing
 
-    // Font metrics for the system fonts: baseline position and height of
-    // capitals/digits. Garmin fonts carry empty space above and below the
-    // glyphs; laying out on baselines recovers that space.
-    // Graphics.getFontAscent() fails on system fonts in the simulator and is
-    // missing on older devices: estimate from the font height instead
-    function fontAsc(dc, f) {
-        return (dc.getFontHeight(f) * 80) / 100;
+    // System font metrics, measured per device in the simulator
+    // (metrics/*/FontMetrics.mc, selected by monkey.jungle)
+    var mSysFonts = [Graphics.FONT_XTINY, Graphics.FONT_TINY, Graphics.FONT_SMALL,
+                     Graphics.FONT_MEDIUM, Graphics.FONT_LARGE];
+
+    function fontIdx(f) {
+        for (var i = 0; i < mSysFonts.size(); i++) {
+            if (mSysFonts[i] == f) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     function fontCap(dc, f) {
-        return (fontAsc(dc, f) * 78) / 100;
+        return fontCapPx(fontIdx(f));
     }
 
-    // Draw text with its baseline at yb
+    // Largest system font whose capitals are at most `cap` px (scaled from
+    // the 322 px tall Edge 830/840 screen), XTINY if none
+    function fontForCap(dc, cap) {
+        var target = (cap * dc.getHeight()) / 322;
+        var best = Graphics.FONT_XTINY;
+        for (var i = 0; i < mSysFonts.size(); i++) {
+            if (fontCapPx(i) <= target) {
+                best = mSysFonts[i];
+            }
+        }
+        return best;
+    }
+
+    // Draw text with the bottom of its capitals/digits at yb
     function drawBase(dc, x, yb, f, text, just) {
-        dc.drawText(x, yb - fontAsc(dc, f), f, text, just);
+        var i = fontIdx(f);
+        dc.drawText(x, yb - fontCapPx(i) - fontTopPx(i), f, text, just);
     }
 
     // Draw with a bold font so that the top of the capitals is at yTop
@@ -468,7 +487,7 @@ class PowerZonesView extends WatchUi.DataField {
 
     // Cell: 3 px + label (SMALL) + 5 px + value (bold) + 5 px
     function cellHeight(dc) {
-        return 3 + fontCap(dc, Graphics.FONT_SMALL) + 5 + BOLD_CAP + 5;
+        return 3 + fontCap(dc, fontForCap(dc, 13)) + 5 + BOLD_CAP + 5;
     }
 
     function drawZoneRow(dc, z, x, y, w, rh) {
@@ -521,7 +540,7 @@ class PowerZonesView extends WatchUi.DataField {
         }
         drawBase(dc, tx, smallBase, sf, range, Graphics.TEXT_JUSTIFY_LEFT);
 
-        var pf = Graphics.FONT_TINY;
+        var pf = fontForCap(dc, 12);
         var pctBase = y + (rh + fontCap(dc, pf)) / 2;
         if (pctStr.length() > 0) {
             drawBase(dc, right, pctBase, pf, pctStr, Graphics.TEXT_JUSTIFY_RIGHT);
@@ -599,8 +618,8 @@ class PowerZonesView extends WatchUi.DataField {
         var cx = x + cw / 2;
         dc.setColor(fg, Graphics.COLOR_TRANSPARENT);
 
-        // Label: SMALL (smaller if it does not fit), capitals 3 px from the top
-        var lf = Graphics.FONT_SMALL;
+        // Label: capitals ~13 px (smaller if it does not fit), 3 px from the top
+        var lf = fontForCap(dc, 13);
         if (dc.getTextWidthInPixels(label, lf) > cw - 4) {
             lf = Graphics.FONT_TINY;
             if (dc.getTextWidthInPixels(label, lf) > cw - 4) {

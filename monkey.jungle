@@ -1,1 +1,9 @@
 project.manifest = manifest.xml
+
+# Measured system font metrics per device family (see metrics/)
+edge530.sourcePath = source;metrics/m830
+edge830.sourcePath = source;metrics/m830
+edge540.sourcePath = source;metrics/m840
+edge840.sourcePath = source;metrics/m840
+edge1040.sourcePath = source;metrics/m1040
+edge1050.sourcePath = source;metrics/m1050
