@@ -31,7 +31,7 @@ jobs:
           fi
           connect-iq-sdk-manager agreement accept
           connect-iq-sdk-manager login
-          connect-iq-sdk-manager sdk set latest
+          connect-iq-sdk-manager sdk set "*"
           echo "$(connect-iq-sdk-manager sdk current-path --bin)" >> "$GITHUB_PATH"
           connect-iq-sdk-manager device download --manifest=manifest.xml
 
