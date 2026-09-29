@@ -411,6 +411,11 @@ class PowerZonesView extends WatchUi.DataField {
         dc.setColor(mFg, mBg);
         dc.clear();
 
+        if (DEMO_MODE == 3) {
+            drawCalibration(dc);
+            return;
+        }
+
         mFull = (h >= 240);
         if (mFull) {
             // Full page: 7 two-line zone rows + one strip of 3 cells (tap toggles the set)
@@ -431,6 +436,23 @@ class PowerZonesView extends WatchUi.DataField {
             drawFooter(dc, 0, half, w, h - half);
         } else {
             drawSummary(dc, 0, 0, w, h);
+        }
+    }
+
+    // Calibration screen for the CI: each system font drawn at a known y
+    // (red line) next to its getFontHeight(), analysed from the screenshot
+    function drawCalibration(dc) {
+        var fonts = [Graphics.FONT_XTINY, Graphics.FONT_TINY, Graphics.FONT_SMALL,
+                     Graphics.FONT_MEDIUM, Graphics.FONT_LARGE];
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
+        dc.clear();
+        for (var i = 0; i < fonts.size(); i++) {
+            var y = 10 + i * 60;
+            dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+            dc.drawLine(0, y, 20, y);
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(30, y, fonts[i], "8Z", Graphics.TEXT_JUSTIFY_LEFT);
+            dc.drawText(150, y, Graphics.FONT_XTINY, dc.getFontHeight(fonts[i]).toString(), Graphics.TEXT_JUSTIFY_LEFT);
         }
     }
 

@@ -65,9 +65,9 @@ jobs:
           done
           monkeyc -f monkey.jungle -e -o bin/PowerZonesSS.iq -y developer_key.der
           # Screenshot builds with sample data (not part of the download)
-          for m in 1 2; do
+          for m in 1 2 3; do
             info "$m"
-            for d in edge830 edge840; do
+            for d in edge530 edge540 edge830 edge840 edge1040 edge1050; do
               monkeyc -f monkey.jungle -d "$d" -o "demo/demo${m}_$d.prg" -y developer_key.der
             done
           done
