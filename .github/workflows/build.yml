@@ -35,6 +35,28 @@ jobs:
           echo "$(connect-iq-sdk-manager sdk current-path --bin)" >> "$GITHUB_PATH"
           connect-iq-sdk-manager device download --manifest=manifest.xml
 
+      - name: Device font info
+        run: |
+          for d in edge830 edge840; do
+            f="$HOME/.Garmin/ConnectIQ/Devices/$d/simulator.json"
+            echo "== $d"; ls "$HOME/.Garmin/ConnectIQ/Devices/$d" || true
+            python3 - "$f" <<'PY' || true
+          import json, sys
+          j = json.load(open(sys.argv[1]))
+          def walk(o, path=""):
+              if isinstance(o, dict):
+                  for k, v in o.items():
+                      walk(v, path + "/" + k)
+              elif isinstance(o, list):
+                  for i, v in enumerate(o):
+                      walk(v, path + "[%d]" % i)
+              else:
+                  if "font" in path.lower():
+                      print(path, "=", o)
+          walk(j)
+          PY
+          done
+
       - name: Developer key
         env:
           DEVELOPER_KEY_B64: ${{ secrets.DEVELOPER_KEY_B64 }}
