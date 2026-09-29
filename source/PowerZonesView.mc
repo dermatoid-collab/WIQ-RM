@@ -432,6 +432,11 @@ class PowerZonesView extends WatchUi.DataField {
         dc.drawText(tx, y2, sf, range, Graphics.TEXT_JUSTIFY_LEFT);
         dc.drawText(right, y2, sf, pctStr, Graphics.TEXT_JUSTIFY_RIGHT);
 
+        // Before the first second of data, show which build is installed
+        if (z == 6 && mTotalMs == 0) {
+            dc.drawText(right, y + 2, sf, "build " + BUILD_NUMBER, Graphics.TEXT_JUSTIFY_RIGHT);
+        }
+
         if (z == mCurZone) {
             drawCurrentMarker(dc, x, y, w, rh);
         }

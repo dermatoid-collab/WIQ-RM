@@ -49,6 +49,7 @@ jobs:
 
       - name: Build
         run: |
+          echo "const BUILD_NUMBER = \"${{ github.run_number }}\";" > source/BuildInfo.mc
           mkdir -p bin
           for d in edge830 edge840; do
             monkeyc -f monkey.jungle -d "$d" -o "bin/PowerZonesSS_$d.prg" -y developer_key.der -w
@@ -57,7 +58,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: PowerZonesSS
+          name: PowerZonesSS-build${{ github.run_number }}
           path: |
             bin/*.prg
             bin/*.iq

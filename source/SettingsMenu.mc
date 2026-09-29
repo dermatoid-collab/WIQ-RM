@@ -25,7 +25,7 @@ function writeSetting(key, value) {
 }
 
 function buildSettingsMenu() {
-    var menu = new WatchUi.Menu2({:title => WatchUi.loadResource(Rez.Strings.MenuTitle)});
+    var menu = new WatchUi.Menu2({:title => WatchUi.loadResource(Rez.Strings.MenuTitle) + " b" + BUILD_NUMBER});
     menu.addItem(new WatchUi.MenuItem(WatchUi.loadResource(Rez.Strings.SetFtp),
         readSetting("ftp", 295).toString() + " W", :ftp, null));
     menu.addItem(new WatchUi.ToggleMenuItem(WatchUi.loadResource(Rez.Strings.MenuRangePct),
