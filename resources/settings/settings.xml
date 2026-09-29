@@ -1,0 +1,51 @@
+<resources>
+    <settings>
+        <setting propertyKey="@Properties.ftp" title="@Strings.SetFtp">
+            <settingConfig type="numeric" min="50" max="700" required="true"/>
+        </setting>
+        <setting propertyKey="@Properties.ssLow" title="@Strings.SetSsLow">
+            <settingConfig type="numeric" min="50" max="150" required="true"/>
+        </setting>
+        <setting propertyKey="@Properties.ssHigh" title="@Strings.SetSsHigh">
+            <settingConfig type="numeric" min="50" max="150" required="true"/>
+        </setting>
+        <setting propertyKey="@Properties.powerAvg" title="@Strings.SetPowerAvg">
+            <settingConfig type="list">
+                <listEntry value="1">@Strings.SetAvg1</listEntry>
+                <listEntry value="3">@Strings.SetAvg3</listEntry>
+                <listEntry value="5">@Strings.SetAvg5</listEntry>
+                <listEntry value="10">@Strings.SetAvg10</listEntry>
+            </settingConfig>
+        </setting>
+        <setting propertyKey="@Properties.rangeUnits" title="@Strings.SetRangeUnits">
+            <settingConfig type="list">
+                <listEntry value="0">@Strings.SetUnitsW</listEntry>
+                <listEntry value="1">@Strings.SetUnitsPct</listEntry>
+            </settingConfig>
+        </setting>
+        <setting propertyKey="@Properties.lastField" title="@Strings.SetLastField">
+            <settingConfig type="list">
+                <listEntry value="0">@Strings.LblPower</listEntry>
+                <listEntry value="1">@Strings.LblFtp</listEntry>
+            </settingConfig>
+        </setting>
+        <setting propertyKey="@Properties.z1Max" title="@Strings.SetZ1">
+            <settingConfig type="numeric" min="1" max="400" required="true"/>
+        </setting>
+        <setting propertyKey="@Properties.z2Max" title="@Strings.SetZ2">
+            <settingConfig type="numeric" min="1" max="400" required="true"/>
+        </setting>
+        <setting propertyKey="@Properties.z3Max" title="@Strings.SetZ3">
+            <settingConfig type="numeric" min="1" max="400" required="true"/>
+        </setting>
+        <setting propertyKey="@Properties.z4Max" title="@Strings.SetZ4">
+            <settingConfig type="numeric" min="1" max="400" required="true"/>
+        </setting>
+        <setting propertyKey="@Properties.z5Max" title="@Strings.SetZ5">
+            <settingConfig type="numeric" min="1" max="400" required="true"/>
+        </setting>
+        <setting propertyKey="@Properties.z6Max" title="@Strings.SetZ6">
+            <settingConfig type="numeric" min="1" max="400" required="true"/>
+        </setting>
+    </settings>
+</resources>

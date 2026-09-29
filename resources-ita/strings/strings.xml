@@ -1,0 +1,36 @@
+<resources>
+    <string id="AppName">Power Zones SS</string>
+
+    <string id="LblMax">Max</string>
+    <string id="LblAvg">Media</string>
+    <string id="LblPower">Potenza</string>
+    <string id="LblFtp">%FTP</string>
+    <string id="LblSs">Sweet Spot</string>
+    <string id="LblSsShort">SS</string>
+    <string id="LblZ4">Z4</string>
+    <string id="LblZ4Plus">Z4+</string>
+
+    <string id="FitSs">Sweet Spot</string>
+    <string id="FitZ4">Tempo in Z4</string>
+    <string id="FitZ4Plus">Tempo in Z4+</string>
+    <string id="FitMin">min</string>
+
+    <string id="SetFtp">FTP (W)</string>
+    <string id="SetSsLow">Sweet Spot limite inferiore (%FTP)</string>
+    <string id="SetSsHigh">Sweet Spot limite superiore (%FTP)</string>
+    <string id="SetZ1">Z1 limite superiore (%FTP)</string>
+    <string id="SetZ2">Z2 limite superiore (%FTP)</string>
+    <string id="SetZ3">Z3 limite superiore (%FTP)</string>
+    <string id="SetZ4">Z4 limite superiore (%FTP)</string>
+    <string id="SetZ5">Z5 limite superiore (%FTP)</string>
+    <string id="SetZ6">Z6 limite superiore (%FTP)</string>
+    <string id="SetPowerAvg">Media potenza visualizzata</string>
+    <string id="SetAvg1">1 s</string>
+    <string id="SetAvg3">3 s</string>
+    <string id="SetAvg5">5 s</string>
+    <string id="SetAvg10">10 s</string>
+    <string id="SetRangeUnits">Intervalli zone in</string>
+    <string id="SetUnitsW">Watt</string>
+    <string id="SetUnitsPct">%FTP</string>
+    <string id="SetLastField">Ultimo campo in basso</string>
+</resources>

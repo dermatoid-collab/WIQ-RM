@@ -1,0 +1,20 @@
+<resources>
+    <properties>
+        <!-- Change the default FTP here before building if you sideload the .prg -->
+        <property id="ftp" type="number">250</property>
+        <property id="ssLow" type="number">88</property>
+        <property id="ssHigh" type="number">94</property>
+        <!-- Coggan upper limits, %FTP (Z7 = above Z6) -->
+        <property id="z1Max" type="number">55</property>
+        <property id="z2Max" type="number">75</property>
+        <property id="z3Max" type="number">90</property>
+        <property id="z4Max" type="number">105</property>
+        <property id="z5Max" type="number">120</property>
+        <property id="z6Max" type="number">150</property>
+        <property id="powerAvg" type="number">3</property>
+        <!-- 0 = watts, 1 = %FTP -->
+        <property id="rangeUnits" type="number">0</property>
+        <!-- 0 = power (W), 1 = %FTP -->
+        <property id="lastField" type="number">0</property>
+    </properties>
+</resources>
