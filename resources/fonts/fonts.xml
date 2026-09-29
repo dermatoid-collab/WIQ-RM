@@ -1,0 +1,6 @@
+<resources>
+    <fonts>
+        <font id="Bold20" filename="bold20.fnt" antialias="false"/>
+        <font id="Bold17" filename="bold17.fnt" antialias="false"/>
+    </fonts>
+</resources>
