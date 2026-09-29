@@ -381,10 +381,9 @@ class PowerZonesView extends WatchUi.DataField {
     // Font metrics for the system fonts: baseline position and height of
     // capitals/digits. Garmin fonts carry empty space above and below the
     // glyphs; laying out on baselines recovers that space.
+    // Graphics.getFontAscent() fails on system fonts in the simulator and is
+    // missing on older devices: estimate from the font height instead
     function fontAsc(dc, f) {
-        if (Graphics has :getFontAscent) {
-            return Graphics.getFontAscent(f);
-        }
         return (dc.getFontHeight(f) * 80) / 100;
     }
 
