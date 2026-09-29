@@ -65,22 +65,15 @@ jobs:
 
       - name: Device font info
         run: |
-          for d in edge830 edge840; do
-            f="$HOME/.Garmin/ConnectIQ/Devices/$d/simulator.json"
-            echo "== $d"; ls "$HOME/.Garmin/ConnectIQ/Devices/$d" || true
-            python3 - "$f" <<'PY' || true
-          import json, sys
-          j = json.load(open(sys.argv[1]))
-          def walk(o, path=""):
-              if isinstance(o, dict):
-                  for k, v in o.items():
-                      walk(v, path + "/" + k)
-              elif isinstance(o, list):
-                  for i, v in enumerate(o):
-                      walk(v, path + "[%d]" % i)
-              else:
-                  if "font" in path.lower():
-                      print(path, "=", o)
-          walk(j)
+          python3 - <<'PY' || true
+          import json, os
+          for d in ["edge830", "edge840"]:
+              base = os.path.expanduser("~/.Garmin/ConnectIQ/Devices/" + d)
+              j = json.load(open(base + "/simulator.json"))
+              print("==", d, "keys:", list(j.keys()))
+              for k, v in j.items():
+                  if "font" in k.lower():
+                      print(k, "=", json.dumps(v)[:3000])
+              c = json.load(open(base + "/compiler.json"))
+              print("compiler keys:", list(c.keys()))
           PY
-          done
