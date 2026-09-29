@@ -1,0 +1,63 @@
+name: Build data field
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Connect IQ SDK manager
+        run: |
+          curl -s https://raw.githubusercontent.com/lindell/connect-iq-sdk-manager-cli/master/install.sh | sh -s -- -b "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Download SDK and devices
+        env:
+          GARMIN_USERNAME: ${{ secrets.GARMIN_USERNAME }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+        run: |
+          if [ -z "$GARMIN_USERNAME" ] || [ -z "$GARMIN_PASSWORD" ]; then
+            echo "::error::Add GARMIN_USERNAME and GARMIN_PASSWORD in Settings > Secrets and variables > Actions"
+            exit 1
+          fi
+          connect-iq-sdk-manager agreement accept
+          connect-iq-sdk-manager login
+          connect-iq-sdk-manager sdk set latest
+          echo "$(connect-iq-sdk-manager sdk current-path --bin)" >> "$GITHUB_PATH"
+          connect-iq-sdk-manager device download --manifest=manifest.xml
+
+      - name: Developer key
+        env:
+          DEVELOPER_KEY_B64: ${{ secrets.DEVELOPER_KEY_B64 }}
+        run: |
+          if [ -n "$DEVELOPER_KEY_B64" ]; then
+            echo "$DEVELOPER_KEY_B64" | base64 -d > developer_key.der
+          else
+            echo "::warning::DEVELOPER_KEY_B64 not set, using a temporary key (fine for sideload, not for Store updates)"
+            openssl genrsa -out developer_key.pem 4096
+            openssl pkcs8 -topk8 -inform PEM -outform DER -in developer_key.pem -out developer_key.der -nocrypt
+          fi
+
+      - name: Build
+        run: |
+          mkdir -p bin
+          for d in edge830 edge840; do
+            monkeyc -f monkey.jungle -d "$d" -o "bin/PowerZonesSS_$d.prg" -y developer_key.der -w
+          done
+          monkeyc -f monkey.jungle -e -o bin/PowerZonesSS.iq -y developer_key.der -w
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PowerZonesSS
+          path: |
+            bin/*.prg
+            bin/*.iq
