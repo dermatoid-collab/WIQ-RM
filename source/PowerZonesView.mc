@@ -303,11 +303,11 @@ class PowerZonesView extends WatchUi.DataField {
         var a = mRangePct ? mZoneMaxPct : mZoneMaxW;
         var u = mRangePct ? "%" : "W";
         if (z == 0) {
-            return "0-" + a[0].toString() + u;
+            return "0 - " + a[0].toString() + u;
         } else if (z == 6) {
-            return ">" + a[5].toString() + u;
+            return "> " + a[5].toString() + u;
         }
-        return (a[z - 1] + 1).toString() + "-" + a[z].toString() + u;
+        return (a[z - 1] + 1).toString() + " - " + a[z].toString() + u;
     }
 
     // Digits and ':' only: safe to draw with the large number fonts
@@ -349,7 +349,7 @@ class PowerZonesView extends WatchUi.DataField {
         mFull = (h >= 240);
         if (mFull) {
             // Full page: 7 zone rows + one strip of 3 cells (tap toggles the set)
-            var stripH = (h * 18) / 100;
+            var stripH = (h * 14) / 100;
             var rowH = (h - stripH) / NUM_ZONES;
             var zonesH = rowH * NUM_ZONES;
             for (var i = 0; i < NUM_ZONES; i++) {
@@ -403,57 +403,34 @@ class PowerZonesView extends WatchUi.DataField {
         var range = rangeText(z);
         var tx = x + STRIPE_W + 6;
         var right = x + w - 6;
-        var avail = right - tx;
 
-        // One line: "Z3 188-225W   0:12:34  21%"
-        // Largest main font fitting the row, range/% two sizes smaller,
-        // stepping down until the whole line fits the width.
-        var n = mFonts.size();
-        var fi = n - 1;
-        var si = n - 1;
-        var showRange = false;
-        for (var i = 0; i < n; i++) {
-            if (dc.getFontHeight(mFonts[i]) > rh + 6) {
-                continue;
-            }
-            var j = (i + 2 < n) ? i + 2 : n - 1;
-            var need = dc.getTextWidthInPixels("Z7", mFonts[i]) + 4
-                + dc.getTextWidthInPixels(range, mFonts[j]) + 6
-                + dc.getTextWidthInPixels("0:00:00", mFonts[i]) + 4
-                + dc.getTextWidthInPixels("100%", mFonts[j]);
-            if (need <= avail) {
-                fi = i;
-                si = j;
-                showRange = true;
+        // Two lines, like the reference field:
+        //   "Z3 0:12:34"          (large)
+        //   "224 - 268W      21%" (small)
+        // Garmin fonts carry empty space above the glyphs, so the large line
+        // may use ~20% more height than what is left above the small line.
+        var sf = Graphics.FONT_XTINY;
+        var sh = dc.getFontHeight(sf);
+        var y2 = y + rh - sh;
+        var f = Graphics.FONT_XTINY;
+        for (var i = 0; i < mFonts.size(); i++) {
+            var fh = dc.getFontHeight(mFonts[i]);
+            if ((fh * 80) / 100 <= rh - sh + 2 &&
+                dc.getTextWidthInPixels(label + " 0:00:00", mFonts[i]) <= right - tx) {
+                f = mFonts[i];
                 break;
             }
         }
-        if (!showRange) {
-            // Nothing fits with the range: largest font that fits without it
-            for (var k = 0; k < n; k++) {
-                var m = (k + 2 < n) ? k + 2 : n - 1;
-                if (dc.getFontHeight(mFonts[k]) <= rh + 6 &&
-                    dc.getTextWidthInPixels("Z7 0:00:00", mFonts[k]) + 4 +
-                    dc.getTextWidthInPixels("100%", mFonts[m]) <= avail) {
-                    fi = k;
-                    si = m;
-                    break;
-                }
-            }
+        var fh1 = dc.getFontHeight(f);
+        var y1 = y2 - (fh1 * 80) / 100;
+        if (y1 < y - fh1 / 5) {
+            y1 = y - fh1 / 5;
         }
-        var f = mFonts[fi];
-        var sf = mFonts[si];
-        var yf = y + (rh - dc.getFontHeight(f)) / 2;
-        var ys = y + (rh - dc.getFontHeight(sf)) / 2;
 
         dc.setColor(mFg, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(tx, yf, f, label, Graphics.TEXT_JUSTIFY_LEFT);
-        if (showRange) {
-            dc.drawText(tx + dc.getTextWidthInPixels(label, f) + 4, ys, sf, range, Graphics.TEXT_JUSTIFY_LEFT);
-        }
-        dc.drawText(right, ys, sf, pctStr, Graphics.TEXT_JUSTIFY_RIGHT);
-        var timeRight = right - dc.getTextWidthInPixels("100%", sf) - 4;
-        dc.drawText(timeRight, yf, f, timeStr, Graphics.TEXT_JUSTIFY_RIGHT);
+        dc.drawText(tx, y1, f, timeStr.length() > 0 ? label + " " + timeStr : label, Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(tx, y2, sf, range, Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(right, y2, sf, pctStr, Graphics.TEXT_JUSTIFY_RIGHT);
 
         if (z == mCurZone) {
             drawCurrentMarker(dc, x, y, w, rh);
