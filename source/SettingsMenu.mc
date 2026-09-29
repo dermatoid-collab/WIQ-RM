@@ -28,10 +28,6 @@ function buildSettingsMenu() {
     var menu = new WatchUi.Menu2({:title => WatchUi.loadResource(Rez.Strings.MenuTitle)});
     menu.addItem(new WatchUi.MenuItem(WatchUi.loadResource(Rez.Strings.SetFtp),
         readSetting("ftp", 295).toString() + " W", :ftp, null));
-    menu.addItem(new WatchUi.MenuItem(WatchUi.loadResource(Rez.Strings.MenuSsLow),
-        readSetting("ssLow", 88).toString() + "%", :ssLow, null));
-    menu.addItem(new WatchUi.MenuItem(WatchUi.loadResource(Rez.Strings.MenuSsHigh),
-        readSetting("ssHigh", 94).toString() + "%", :ssHigh, null));
     menu.addItem(new WatchUi.ToggleMenuItem(WatchUi.loadResource(Rez.Strings.MenuRangePct),
         null, :rangeUnits, readSetting("rangeUnits", 0) == 1, null));
     menu.addItem(new WatchUi.ToggleMenuItem(WatchUi.loadResource(Rez.Strings.MenuLastPct),
@@ -49,10 +45,6 @@ class SettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
         var id = item.getId();
         if (id == :ftp) {
             pushNumberPicker(item, "ftp", WatchUi.loadResource(Rez.Strings.SetFtp), 295, 50, 999, " W");
-        } else if (id == :ssLow) {
-            pushNumberPicker(item, "ssLow", WatchUi.loadResource(Rez.Strings.MenuSsLow), 88, 50, 150, "%");
-        } else if (id == :ssHigh) {
-            pushNumberPicker(item, "ssHigh", WatchUi.loadResource(Rez.Strings.MenuSsHigh), 94, 50, 150, "%");
         } else if (id == :rangeUnits || id == :lastField) {
             var on = (item as WatchUi.ToggleMenuItem).isEnabled();
             writeSetting(id == :rangeUnits ? "rangeUnits" : "lastField", on ? 1 : 0);

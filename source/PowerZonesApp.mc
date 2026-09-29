@@ -17,7 +17,7 @@ class PowerZonesApp extends Application.AppBase {
 
     function getInitialView() {
         mView = new PowerZonesView();
-        return [mView];
+        return [mView, new PowerZonesDelegate(mView)];
     }
 
     // On-device settings menu (see SettingsMenu.mc)
@@ -30,5 +30,20 @@ class PowerZonesApp extends Application.AppBase {
             mView.loadSettings();
         }
         WatchUi.requestUpdate();
+    }
+}
+
+// Taps inside the data field toggle the bottom strip (Edge touch devices)
+class PowerZonesDelegate extends WatchUi.BehaviorDelegate {
+
+    var mView;
+
+    function initialize(view) {
+        BehaviorDelegate.initialize();
+        mView = view;
+    }
+
+    function onTap(evt) {
+        return mView.onFieldTap();
     }
 }

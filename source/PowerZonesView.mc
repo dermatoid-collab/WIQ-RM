@@ -28,8 +28,9 @@ class PowerZonesView extends WatchUi.DataField {
     var mFtp = 250;
     var mZoneMaxPct = [55, 75, 90, 105, 120, 150];
     var mZoneMaxW = new [6];
-    var mSsLowPct = 88;
-    var mSsHighPct = 94;
+    // Sweet Spot fixed at 84-97 %FTP, limits included
+    const SS_LOW_PCT = 84;
+    const SS_HIGH_PCT = 97;
     var mSsLowW = 0;
     var mSsHighW = 0;
     var mAvgN = 3;
@@ -69,6 +70,9 @@ class PowerZonesView extends WatchUi.DataField {
     var mFg = Graphics.COLOR_BLACK;
     var mBg = Graphics.COLOR_WHITE;
     var mDark = false;
+    var mFull = false;
+    var mShowTimes = false; // bottom strip: false = NP/Avg/Pwr 3s, true = SS/Z4/Z4+
+    var mNumFonts = [Graphics.FONT_NUMBER_MEDIUM, Graphics.FONT_NUMBER_MILD];
     var mFonts = [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL, Graphics.FONT_TINY, Graphics.FONT_XTINY];
 
     var mStrNp;
@@ -131,7 +135,7 @@ class PowerZonesView extends WatchUi.DataField {
     }
 
     function loadSettings() {
-        mFtp = readNum("ftp", 250);
+        mFtp = readNum("ftp", 295);
         if (mFtp < 50) {
             mFtp = 50;
         }
@@ -147,15 +151,8 @@ class PowerZonesView extends WatchUi.DataField {
             mZoneMaxW[i] = (mFtp * p) / 100;
             prev = p;
         }
-        mSsLowPct = readNum("ssLow", 88);
-        mSsHighPct = readNum("ssHigh", 94);
-        if (mSsHighPct < mSsLowPct) {
-            var t = mSsLowPct;
-            mSsLowPct = mSsHighPct;
-            mSsHighPct = t;
-        }
-        mSsLowW = (mFtp * mSsLowPct + 99) / 100;
-        mSsHighW = (mFtp * mSsHighPct) / 100;
+        mSsLowW = (mFtp * SS_LOW_PCT + 99) / 100;
+        mSsHighW = (mFtp * SS_HIGH_PCT) / 100;
 
         mAvgN = readNum("powerAvg", 3);
         if (mAvgN < 1) {
@@ -303,20 +300,26 @@ class PowerZonesView extends WatchUi.DataField {
     }
 
     function rangeText(z) {
-        if (mRangePct) {
-            if (z == 0) {
-                return "0 - " + mZoneMaxPct[0] + "%";
-            } else if (z == 6) {
-                return "> " + mZoneMaxPct[5] + "%";
-            }
-            return (mZoneMaxPct[z - 1] + 1).toString() + " - " + mZoneMaxPct[z] + "%";
-        }
+        var a = mRangePct ? mZoneMaxPct : mZoneMaxW;
+        var u = mRangePct ? "%" : "W";
         if (z == 0) {
-            return "0 - " + mZoneMaxW[0] + "W";
+            return "0-" + a[0].toString() + u;
         } else if (z == 6) {
-            return "> " + mZoneMaxW[5] + "W";
+            return ">" + a[5].toString() + u;
         }
-        return (mZoneMaxW[z - 1] + 1).toString() + " - " + mZoneMaxW[z] + "W";
+        return (a[z - 1] + 1).toString() + "-" + a[z].toString() + u;
+    }
+
+    // Digits and ':' only: safe to draw with the large number fonts
+    function isNumeric(text) {
+        var chars = text.toCharArray();
+        for (var i = 0; i < chars.size(); i++) {
+            var c = chars[i].toNumber();
+            if (!((c >= 48 && c <= 57) || c == 58)) {
+                return false;
+            }
+        }
+        return chars.size() > 0;
     }
 
     // Largest font whose height fits maxH (and text fits maxW when given)
@@ -343,16 +346,20 @@ class PowerZonesView extends WatchUi.DataField {
         dc.setColor(mFg, mBg);
         dc.clear();
 
-        if (h >= 240) {
-            // Full page: 7 zone rows + SS/Z4/Z4+ strip + Max/Avg/Power footer
-            var stripH = (h * 14) / 100;
-            var rowH = (h - 2 * stripH) / NUM_ZONES;
+        mFull = (h >= 240);
+        if (mFull) {
+            // Full page: 7 zone rows + one strip of 3 cells (tap toggles the set)
+            var stripH = (h * 18) / 100;
+            var rowH = (h - stripH) / NUM_ZONES;
             var zonesH = rowH * NUM_ZONES;
             for (var i = 0; i < NUM_ZONES; i++) {
                 drawZoneRow(dc, NUM_ZONES - 1 - i, 0, i * rowH, w, rowH);
             }
-            drawSummary(dc, 0, zonesH, w, stripH);
-            drawFooter(dc, 0, zonesH + stripH, w, h - zonesH - stripH);
+            if (mShowTimes) {
+                drawSummary(dc, 0, zonesH, w, h - zonesH);
+            } else {
+                drawFooter(dc, 0, zonesH, w, h - zonesH);
+            }
         } else if (h >= 90) {
             var half = h / 2;
             drawSummary(dc, 0, 0, w, half);
@@ -360,6 +367,16 @@ class PowerZonesView extends WatchUi.DataField {
         } else {
             drawSummary(dc, 0, 0, w, h);
         }
+    }
+
+    // Called by PowerZonesDelegate on a tap inside the field
+    function onFieldTap() {
+        if (!mFull) {
+            return false;
+        }
+        mShowTimes = !mShowTimes;
+        WatchUi.requestUpdate();
+        return true;
     }
 
     function drawZoneRow(dc, z, x, y, w, rh) {
@@ -384,43 +401,59 @@ class PowerZonesView extends WatchUi.DataField {
         var timeStr = ms > 0 ? fmtTime(ms) : "";
         var pctStr = mTotalMs > 0 ? (frac * 100 + 0.5).toNumber().toString() + "%" : "";
         var range = rangeText(z);
-        var tx = x + STRIPE_W + 8;
-        var right = x + w - 8;
-        var small = Graphics.FONT_XTINY;
-        var smallH = dc.getFontHeight(small);
+        var tx = x + STRIPE_W + 6;
+        var right = x + w - 6;
+        var avail = right - tx;
 
-        dc.setColor(mFg, Graphics.COLOR_TRANSPARENT);
-
-        var topH = rh - smallH + 4; // fonts carry some internal padding
-        if (topH >= dc.getFontHeight(Graphics.FONT_TINY)) {
-            // Two lines: "Z3 0:12:34" / "188 - 225W      21%"
-            var f = pickFont(dc, label + " " + "0:00:00", inner - 16, topH);
-            var fh = dc.getFontHeight(f);
-            var y1 = y + (rh - fh - smallH + 4) / 2;
-            if (y1 < y) {
-                y1 = y;
+        // One line: "Z3 188-225W   0:12:34  21%"
+        // Largest main font fitting the row, range/% two sizes smaller,
+        // stepping down until the whole line fits the width.
+        var n = mFonts.size();
+        var fi = n - 1;
+        var si = n - 1;
+        var showRange = false;
+        for (var i = 0; i < n; i++) {
+            if (dc.getFontHeight(mFonts[i]) > rh + 6) {
+                continue;
             }
-            dc.drawText(tx, y1, f, timeStr.length() > 0 ? label + " " + timeStr : label, Graphics.TEXT_JUSTIFY_LEFT);
-            var y2 = y + rh - smallH;
-            dc.drawText(tx, y2, small, range, Graphics.TEXT_JUSTIFY_LEFT);
-            dc.drawText(right, y2, small, pctStr, Graphics.TEXT_JUSTIFY_RIGHT);
-        } else {
-            // One line: "Z3 188-225W   0:12:34  21%"
-            var f1 = pickFont(dc, null, 0, rh);
-            var fh1 = dc.getFontHeight(f1);
-            var yf = y + (rh - fh1) / 2;
-            var ys = y + (rh - smallH) / 2;
-            dc.drawText(tx, yf, f1, label, Graphics.TEXT_JUSTIFY_LEFT);
-            var pctW = dc.getTextWidthInPixels("100%", small);
-            dc.drawText(right, ys, small, pctStr, Graphics.TEXT_JUSTIFY_RIGHT);
-            var timeRight = right - pctW - 6;
-            dc.drawText(timeRight, yf, f1, timeStr, Graphics.TEXT_JUSTIFY_RIGHT);
-            var rx = tx + dc.getTextWidthInPixels(label, f1) + 6;
-            var timeW = dc.getTextWidthInPixels(timeStr, f1);
-            if (rx + dc.getTextWidthInPixels(range, small) < timeRight - timeW - 4) {
-                dc.drawText(rx, ys, small, range, Graphics.TEXT_JUSTIFY_LEFT);
+            var j = (i + 2 < n) ? i + 2 : n - 1;
+            var need = dc.getTextWidthInPixels("Z7", mFonts[i]) + 4
+                + dc.getTextWidthInPixels(range, mFonts[j]) + 6
+                + dc.getTextWidthInPixels("0:00:00", mFonts[i]) + 4
+                + dc.getTextWidthInPixels("100%", mFonts[j]);
+            if (need <= avail) {
+                fi = i;
+                si = j;
+                showRange = true;
+                break;
             }
         }
+        if (!showRange) {
+            // Nothing fits with the range: largest font that fits without it
+            for (var k = 0; k < n; k++) {
+                var m = (k + 2 < n) ? k + 2 : n - 1;
+                if (dc.getFontHeight(mFonts[k]) <= rh + 6 &&
+                    dc.getTextWidthInPixels("Z7 0:00:00", mFonts[k]) + 4 +
+                    dc.getTextWidthInPixels("100%", mFonts[m]) <= avail) {
+                    fi = k;
+                    si = m;
+                    break;
+                }
+            }
+        }
+        var f = mFonts[fi];
+        var sf = mFonts[si];
+        var yf = y + (rh - dc.getFontHeight(f)) / 2;
+        var ys = y + (rh - dc.getFontHeight(sf)) / 2;
+
+        dc.setColor(mFg, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(tx, yf, f, label, Graphics.TEXT_JUSTIFY_LEFT);
+        if (showRange) {
+            dc.drawText(tx + dc.getTextWidthInPixels(label, f) + 4, ys, sf, range, Graphics.TEXT_JUSTIFY_LEFT);
+        }
+        dc.drawText(right, ys, sf, pctStr, Graphics.TEXT_JUSTIFY_RIGHT);
+        var timeRight = right - dc.getTextWidthInPixels("100%", sf) - 4;
+        dc.drawText(timeRight, yf, f, timeStr, Graphics.TEXT_JUSTIFY_RIGHT);
 
         if (z == mCurZone) {
             drawCurrentMarker(dc, x, y, w, rh);
@@ -478,7 +511,19 @@ class PowerZonesView extends WatchUi.DataField {
         dc.drawText(cx, y, lf, label, Graphics.TEXT_JUSTIFY_CENTER);
 
         var avail = ch - lh + 4;
-        var vf = pickFont(dc, value, cw - 4, avail);
+        var vf = null;
+        if (isNumeric(value)) {
+            for (var i = 0; i < mNumFonts.size(); i++) {
+                var nf = mNumFonts[i];
+                if (dc.getFontHeight(nf) <= avail && dc.getTextWidthInPixels(value, nf) <= cw - 4) {
+                    vf = nf;
+                    break;
+                }
+            }
+        }
+        if (vf == null) {
+            vf = pickFont(dc, value, cw - 4, avail);
+        }
         var vh = dc.getFontHeight(vf);
         var vy = y + lh - 2 + (avail - vh) / 2;
         dc.drawText(cx, vy, vf, value, Graphics.TEXT_JUSTIFY_CENTER);

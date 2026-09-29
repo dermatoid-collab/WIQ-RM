@@ -3,12 +3,6 @@
         <setting propertyKey="@Properties.ftp" title="@Strings.SetFtp">
             <settingConfig type="numeric" min="50" max="700" required="true"/>
         </setting>
-        <setting propertyKey="@Properties.ssLow" title="@Strings.SetSsLow">
-            <settingConfig type="numeric" min="50" max="150" required="true"/>
-        </setting>
-        <setting propertyKey="@Properties.ssHigh" title="@Strings.SetSsHigh">
-            <settingConfig type="numeric" min="50" max="150" required="true"/>
-        </setting>
         <setting propertyKey="@Properties.powerAvg" title="@Strings.SetPowerAvg">
             <settingConfig type="list">
                 <listEntry value="1">@Strings.SetAvg1</listEntry>

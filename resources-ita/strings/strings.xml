@@ -16,8 +16,6 @@
     <string id="FitMin">min</string>
 
     <string id="SetFtp">FTP (W)</string>
-    <string id="SetSsLow">Sweet Spot limite inferiore (%FTP)</string>
-    <string id="SetSsHigh">Sweet Spot limite superiore (%FTP)</string>
     <string id="SetZ1">Z1 limite superiore (%FTP)</string>
     <string id="SetZ2">Z2 limite superiore (%FTP)</string>
     <string id="SetZ3">Z3 limite superiore (%FTP)</string>
@@ -34,8 +32,6 @@
     <string id="SetUnitsPct">%FTP</string>
     <string id="SetLastField">Ultimo campo in basso</string>
     <string id="MenuTitle">Power Zones SS</string>
-    <string id="MenuSsLow">Sweet Spot min</string>
-    <string id="MenuSsHigh">Sweet Spot max</string>
     <string id="MenuRangePct">Intervalli zone in %FTP</string>
     <string id="MenuLastPct">Ultimo campo in %FTP</string>
 </resources>

@@ -18,17 +18,15 @@ Target: Edge 830 e Edge 840 (testato solo a livello di codice); inclusi anche 53
 │▌Z2 138 - 187W   0:35:02 50%  │  ← barra colorata = % del tempo
 │▌Z1 0 - 137W     0:09:11 13%  │
 ├─────────┬─────────┬──────────┤
-│   SS    │   Z4    │   Z4+    │  ← evidenziato se ci sei dentro ora
-│ 0:12:40 │ 0:04:10 │ 0:04:10  │
-├─────────┼─────────┼──────────┤
-│   Max   │  Media  │ Potenza  │  ← ultima cella nel colore della zona
-│   512   │   196   │   234    │
+│   NP    │  Media  │ Pot. 3s  │  ← all'avvio; ultima cella nel colore della zona
+│   212   │   196   │   234    │
 └─────────┴─────────┴──────────┘
+  tap sul campo → SS / Z4 / Z4+ (tempi), tap di nuovo → NP / Media / Pot. 3s
 ```
 
-- **Pagina intera** (altezza ≥ 240 px): 7 zone + striscia SS/Z4/Z4+ + Max/Media/Potenza.
-  Se lo spazio lo permette, ogni zona va su due righe come nell'originale, altrimenti su una.
-- **Metà pagina**: solo SS/Z4/Z4+ e Max/Media/Potenza.
+- **Pagina intera** (altezza ≥ 240 px): 7 zone su una riga ciascuna + una fila di 3 caselle;
+  un tap sul campo alterna NP/Media/Pot. 3s e SS/Z4/Z4+.
+- **Metà pagina**: SS/Z4/Z4+ e NP/Media/Pot. 3s.
 - **Campo piccolo**: solo SS/Z4/Z4+.
 - Supporta sfondo chiaro e scuro (in modalità notte la barra di percentuale diventa una linea sottile).
 
@@ -53,14 +51,14 @@ Target: Edge 830 e Edge 840 (testato solo a livello di codice); inclusi anche 53
 | Z5 VO2max | 106 – 120 | 263 – 300 |
 | Z6 Capacità anaerobica | 121 – 150 | 301 – 375 |
 | Z7 Neuromuscolare | > 150 | > 375 |
-| **Sweet Spot** | 88 – 94 | 220 – 235 |
+| **Sweet Spot** (fisso, limiti inclusi) | 84 – 97 | 210 – 242 |
 
 Limite superiore di ogni zona = `floor(FTP × % / 100)`. Sweet Spot si sovrappone a Z3/Z4 e viene
 contato in parallelo.
 
 ## Impostazioni
 
-FTP, limiti Sweet Spot, limiti Z1–Z6, media della potenza visualizzata (1/3/5/10 s), intervalli
+FTP (anche dal menu sull'Edge: tocca il campo in Profili attività → Schermate dati), limiti Z1–Z6, media della potenza visualizzata (1/3/5/10 s), intervalli
 in W o %FTP, ultima cella (Potenza o %FTP). Il data field non può leggere l'FTP dal profilo Garmin
 (l'API Connect IQ non lo espone), quindi va impostato qui.
 

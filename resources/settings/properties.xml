@@ -2,8 +2,6 @@
     <properties>
         <!-- Change the default FTP here before building if you sideload the .prg -->
         <property id="ftp" type="number">295</property>
-        <property id="ssLow" type="number">88</property>
-        <property id="ssHigh" type="number">94</property>
         <!-- Coggan upper limits, %FTP (Z7 = above Z6) -->
         <property id="z1Max" type="number">55</property>
         <property id="z2Max" type="number">75</property>
