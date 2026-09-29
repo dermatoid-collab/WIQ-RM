@@ -17,84 +17,84 @@ jobs:
 
       - uses: actions/setup-java@v4
         with:
- screenshot builds with sample data (not part of the download)distribution: temurin
- screenshot builds with sample data (not part of the download)java-version: "17"
+          distribution: temurin
+          java-version: "17"
 
       - name: Install Connect IQ SDK manager
         run: |
- screenshot builds with sample data (not part of the download)curl -s https://raw.githubusercontent.com/lindell/connect-iq-sdk-manager-cli/master/install.sh | sh -s -- -b "$HOME/.local/bin"
- screenshot builds with sample data (not part of the download)echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          curl -s https://raw.githubusercontent.com/lindell/connect-iq-sdk-manager-cli/master/install.sh | sh -s -- -b "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Download SDK and devices
         env:
- screenshot builds with sample data (not part of the download)GARMIN_USERNAME: ${{ secrets.GARMIN_USERNAME }}
- screenshot builds with sample data (not part of the download)GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+          GARMIN_USERNAME: ${{ secrets.GARMIN_USERNAME }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
         run: |
- screenshot builds with sample data (not part of the download)if [ -z "$GARMIN_USERNAME" ] || [ -z "$GARMIN_PASSWORD" ]; then
- screenshot builds with sample data (not part of the download)  echo "::error::Add GARMIN_USERNAME and GARMIN_PASSWORD in Settings > Secrets and variables > Actions"
- screenshot builds with sample data (not part of the download)  exit 1
- screenshot builds with sample data (not part of the download)fi
- screenshot builds with sample data (not part of the download)connect-iq-sdk-manager agreement accept
- screenshot builds with sample data (not part of the download)connect-iq-sdk-manager login
- screenshot builds with sample data (not part of the download)connect-iq-sdk-manager sdk set "*"
- screenshot builds with sample data (not part of the download)echo "$(connect-iq-sdk-manager sdk current-path --bin)" >> "$GITHUB_PATH"
- screenshot builds with sample data (not part of the download)echo "SDK_BIN=$(connect-iq-sdk-manager sdk current-path --bin)" >> "$GITHUB_ENV"
- screenshot builds with sample data (not part of the download)connect-iq-sdk-manager device download --manifest=manifest.xml
+          if [ -z "$GARMIN_USERNAME" ] || [ -z "$GARMIN_PASSWORD" ]; then
+            echo "::error::Add GARMIN_USERNAME and GARMIN_PASSWORD in Settings > Secrets and variables > Actions"
+            exit 1
+          fi
+          connect-iq-sdk-manager agreement accept
+          connect-iq-sdk-manager login
+          connect-iq-sdk-manager sdk set "*"
+          echo "$(connect-iq-sdk-manager sdk current-path --bin)" >> "$GITHUB_PATH"
+          echo "SDK_BIN=$(connect-iq-sdk-manager sdk current-path --bin)" >> "$GITHUB_ENV"
+          connect-iq-sdk-manager device download --manifest=manifest.xml
 
       - name: Developer key
         env:
- screenshot builds with sample data (not part of the download)DEVELOPER_KEY_B64: ${{ secrets.DEVELOPER_KEY_B64 }}
+          DEVELOPER_KEY_B64: ${{ secrets.DEVELOPER_KEY_B64 }}
         run: |
- screenshot builds with sample data (not part of the download)if [ -n "$DEVELOPER_KEY_B64" ]; then
- screenshot builds with sample data (not part of the download)  echo "$DEVELOPER_KEY_B64" | base64 -d > developer_key.der
- screenshot builds with sample data (not part of the download)else
- screenshot builds with sample data (not part of the download)  echo "::warning::DEVELOPER_KEY_B64 not set, using a temporary key (fine for sideload, not for Store updates)"
- screenshot builds with sample data (not part of the download)  openssl genrsa -out developer_key.pem 4096
- screenshot builds with sample data (not part of the download)  openssl pkcs8 -topk8 -inform PEM -outform DER -in developer_key.pem -out developer_key.der -nocrypt
- screenshot builds with sample data (not part of the download)fi
+          if [ -n "$DEVELOPER_KEY_B64" ]; then
+            echo "$DEVELOPER_KEY_B64" | base64 -d > developer_key.der
+          else
+            echo "::warning::DEVELOPER_KEY_B64 not set, using a temporary key (fine for sideload, not for Store updates)"
+            openssl genrsa -out developer_key.pem 4096
+            openssl pkcs8 -topk8 -inform PEM -outform DER -in developer_key.pem -out developer_key.der -nocrypt
+          fi
 
       - name: Build
         run: |
- screenshot builds with sample data (not part of the download)mkdir -p bin
- screenshot builds with sample data (not part of the download)info() {
- screenshot builds with sample data (not part of the download)  printf 'const BUILD_NUMBER = "%s";\nconst DEMO_MODE = %s;\n' "${{ github.run_number }}" "$1" > source/BuildInfo.mc
- screenshot builds with sample data (not part of the download)}
- screenshot builds with sample data (not part of the download)info 0
- screenshot builds with sample data (not part of the download)for d in edge830 edge840; do
- screenshot builds with sample data (not part of the download)  monkeyc -f monkey.jungle -d "$d" -o "bin/PowerZonesSS_$d.prg" -y developer_key.der
- screenshot builds with sample data (not part of the download)done
- screenshot builds with sample data (not part of the download)monkeyc -f monkey.jungle -e -o bin/PowerZonesSS.iq -y developer_key.der
- screenshot builds with sample data (not part of the download)# screenshot builds with sample data (not part of the download)
- screenshot builds with sample data (not part of the download)for m in 1 2; do
- screenshot builds with sample data (not part of the download)  info $m
- screenshot builds with sample data (not part of the download)  for d in edge830 edge840; do
- screenshot builds with sample data (not part of the download)    monkeyc -f monkey.jungle -d "$d" -o "demo/demo${m}_$d.prg" -y developer_key.der
- screenshot builds with sample data (not part of the download)  done
- screenshot builds with sample data (not part of the download)done
- screenshot builds with sample data (not part of the download)info 0
+          info() {
+            printf 'const BUILD_NUMBER = "%s";\nconst DEMO_MODE = %s;\n' "${{ github.run_number }}" "$1" > source/BuildInfo.mc
+          }
+          mkdir -p bin demo
+          info 0
+          for d in edge830 edge840; do
+            monkeyc -f monkey.jungle -d "$d" -o "bin/PowerZonesSS_$d.prg" -y developer_key.der
+          done
+          monkeyc -f monkey.jungle -e -o bin/PowerZonesSS.iq -y developer_key.der
+          # Screenshot builds with sample data (not part of the download)
+          for m in 1 2; do
+            info "$m"
+            for d in edge830 edge840; do
+              monkeyc -f monkey.jungle -d "$d" -o "demo/demo${m}_$d.prg" -y developer_key.der
+            done
+          done
+          info 0
 
       - uses: actions/upload-artifact@v4
         with:
- screenshot builds with sample data (not part of the download)name: PowerZonesSS-build${{ github.run_number }}
- screenshot builds with sample data (not part of the download)path: |
- screenshot builds with sample data (not part of the download)  bin/*.prg
- screenshot builds with sample data (not part of the download)  bin/*.iq
+          name: PowerZonesSS-build${{ github.run_number }}
+          path: |
+            bin/*.prg
+            bin/*.iq
 
       - name: Simulator screenshots
         continue-on-error: true
         run: |
- screenshot builds with sample data (not part of the download)sudo apt-get update -qq
- screenshot builds with sample data (not part of the download)sudo apt-get install -y -qq xvfb imagemagick libwebkit2gtk-4.0-37 libusb-1.0-0 libsm6 libxxf86vm1 libsdl2-2.0-0 > /dev/null
- screenshot builds with sample data (not part of the download)echo "missing libraries:"; ldd "$SDK_BIN/simulator" | grep "not found" || echo none
- screenshot builds with sample data (not part of the download)xvfb-run -a -s "-screen 0 1280x1024x24" ci/screenshots.sh
- screenshot builds with sample data (not part of the download)tail -5 shots/simulator.log || true
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb imagemagick libwebkit2gtk-4.0-37 libusb-1.0-0 libsm6 libxxf86vm1 libsdl2-2.0-0 > /dev/null
+          echo "missing libraries:"; ldd "$SDK_BIN/simulator" | grep "not found" || echo none
+          xvfb-run -a -s "-screen 0 1280x1024x24" ci/screenshots.sh
+          tail -5 shots/simulator.log || true
 
       - name: Publish screenshots to the screenshots branch
         continue-on-error: true
         run: |
- screenshot builds with sample data (not part of the download)cd shots
- screenshot builds with sample data (not part of the download)git init -q
- screenshot builds with sample data (not part of the download)git checkout -q -b screenshots
- screenshot builds with sample data (not part of the download)git add *.png *.log
- screenshot builds with sample data (not part of the download)git -c user.name=ci -c user.email=ci@localhost commit -qm "Screenshots build ${{ github.run_number }}"
- screenshot builds with sample data (not part of the download)git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" screenshots
+          cd shots
+          git init -q
+          git checkout -q -b screenshots
+          git add -A
+          git -c user.name=ci -c user.email=ci@localhost commit -qm "Screenshots build ${{ github.run_number }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" screenshots
