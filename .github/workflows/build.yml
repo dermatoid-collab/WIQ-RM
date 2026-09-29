@@ -39,7 +39,7 @@ jobs:
           connect-iq-sdk-manager sdk set "*"
           echo "$(connect-iq-sdk-manager sdk current-path --bin)" >> "$GITHUB_PATH"
           echo "SDK_BIN=$(connect-iq-sdk-manager sdk current-path --bin)" >> "$GITHUB_ENV"
-          connect-iq-sdk-manager device download --manifest=manifest.xml
+          connect-iq-sdk-manager device download --manifest=manifest.xml --include-fonts
 
       - name: Developer key
         env:
