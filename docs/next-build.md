@@ -1,4 +1,4 @@
-# Modifiche concordate per la prossima build (non ancora implementate)
+# Modifiche della build 18 (implementate)
 
 Riferimento: foto build 13 su Edge 830, FTP 295 W.
 
