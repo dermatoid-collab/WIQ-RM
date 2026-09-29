@@ -1,9 +1,9 @@
 <resources>
     <string id="AppName">Power Zones SS</string>
 
-    <string id="LblMax">Max</string>
+    <string id="LblNp">NP</string>
     <string id="LblAvg">Media</string>
-    <string id="LblPower">Potenza</string>
+    <string id="LblPower">Pot.</string>
     <string id="LblFtp">%FTP</string>
     <string id="LblSs">Sweet Spot</string>
     <string id="LblSsShort">SS</string>
@@ -33,4 +33,9 @@
     <string id="SetUnitsW">Watt</string>
     <string id="SetUnitsPct">%FTP</string>
     <string id="SetLastField">Ultimo campo in basso</string>
+    <string id="MenuTitle">Power Zones SS</string>
+    <string id="MenuSsLow">Sweet Spot min</string>
+    <string id="MenuSsHigh">Sweet Spot max</string>
+    <string id="MenuRangePct">Intervalli zone in %FTP</string>
+    <string id="MenuLastPct">Ultimo campo in %FTP</string>
 </resources>

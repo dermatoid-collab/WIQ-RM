@@ -20,6 +20,11 @@ class PowerZonesApp extends Application.AppBase {
         return [mView];
     }
 
+    // On-device settings menu (see SettingsMenu.mc)
+    function getSettingsView() {
+        return buildSettingsMenu();
+    }
+
     function onSettingsChanged() {
         if (mView != null) {
             mView.loadSettings();

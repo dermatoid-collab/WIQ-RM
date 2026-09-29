@@ -3,6 +3,7 @@ import Toybox.Application;
 import Toybox.FitContributor;
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.Math;
 import Toybox.WatchUi;
 
 // Time in Coggan power zones (%FTP) + Sweet Spot, Z4 and Z4+ totals.
@@ -49,7 +50,15 @@ class PowerZonesView extends WatchUi.DataField {
     var mCurZone = -1;
     var mInSs = false;
     var mAvgPower = null;
-    var mMaxPower = null;
+
+    // Normalized Power: 30 s rolling average, 4th power, mean, 4th root
+    var mNpBuf = new [30];
+    var mNpIdx = 0;
+    var mNpCount = 0;
+    var mNpRollSum = 0;
+    var mNpSum4 = 0.0d;
+    var mNpN = 0;
+    var mNp = null;
 
     // FIT session fields (minutes)
     var mFitSs = null;
@@ -62,7 +71,7 @@ class PowerZonesView extends WatchUi.DataField {
     var mDark = false;
     var mFonts = [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL, Graphics.FONT_TINY, Graphics.FONT_XTINY];
 
-    var mStrMax;
+    var mStrNp;
     var mStrAvg;
     var mStrPower;
     var mStrFtp;
@@ -74,7 +83,7 @@ class PowerZonesView extends WatchUi.DataField {
     function initialize() {
         DataField.initialize();
 
-        mStrMax = WatchUi.loadResource(Rez.Strings.LblMax);
+        mStrNp = WatchUi.loadResource(Rez.Strings.LblNp);
         mStrAvg = WatchUi.loadResource(Rez.Strings.LblAvg);
         mStrPower = WatchUi.loadResource(Rez.Strings.LblPower);
         mStrFtp = WatchUi.loadResource(Rez.Strings.LblFtp);
@@ -169,6 +178,12 @@ class PowerZonesView extends WatchUi.DataField {
         mSsMs = 0;
         mTotalMs = 0;
         mLastTimer = null;
+        mNpIdx = 0;
+        mNpCount = 0;
+        mNpRollSum = 0;
+        mNpSum4 = 0.0d;
+        mNpN = 0;
+        mNp = null;
     }
 
     function onTimerReset() {
@@ -218,7 +233,6 @@ class PowerZonesView extends WatchUi.DataField {
         }
 
         mAvgPower = (info has :averagePower) ? info.averagePower : null;
-        mMaxPower = (info has :maxPower) ? info.maxPower : null;
 
         // Time accumulation driven by the activity timer (stops on pause)
         var t = info.timerTime;
@@ -236,10 +250,29 @@ class PowerZonesView extends WatchUi.DataField {
                 if (isSs(p)) {
                     mSsMs += dt;
                 }
+                addNpSample(p);
                 updateFit();
             }
         }
         mLastTimer = t;
+    }
+
+    // Called once per timer second with 1 s power
+    function addNpSample(p) {
+        if (mNpCount == 30) {
+            mNpRollSum -= mNpBuf[mNpIdx];
+        } else {
+            mNpCount++;
+        }
+        mNpBuf[mNpIdx] = p;
+        mNpRollSum += p;
+        mNpIdx = (mNpIdx + 1) % 30;
+        if (mNpCount == 30) {
+            var a = mNpRollSum.toDouble() / 30.0d;
+            mNpSum4 += a * a * a * a;
+            mNpN++;
+            mNp = (Math.pow(mNpSum4 / mNpN, 0.25) + 0.5).toNumber();
+        }
     }
 
     function z4PlusMs() {
@@ -418,10 +451,10 @@ class PowerZonesView extends WatchUi.DataField {
 
     function drawFooter(dc, x, y, w, h) {
         var cw = w / 3;
-        drawCell(dc, x, y, cw, h, mStrMax, mMaxPower != null ? mMaxPower.toString() : "--", null);
+        drawCell(dc, x, y, cw, h, mStrNp, mNp != null ? mNp.toString() : "--", null);
         drawCell(dc, x + cw, y, cw, h, mStrAvg, mAvgPower != null ? mAvgPower.toString() : "--", null);
 
-        var label = mLastFieldPct ? mStrFtp : mStrPower;
+        var label = (mLastFieldPct ? mStrFtp : mStrPower) + " " + mAvgN.toString() + "s";
         var val = "--";
         if (mDispPower != null) {
             val = mLastFieldPct
