@@ -1,4 +1,4 @@
-# Modifiche concordate per la prossima build (non ancora implementate)
+# Modifiche della build 21 (implementate)
 
 Stato attuale: build 20, approvata su Edge 830.
 
