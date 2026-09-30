@@ -5,6 +5,16 @@ on:
     branches-ignore:
       - screenshots
   workflow_dispatch:
+    inputs:
+      screenshots:
+        description: "Run the simulator and publish screenshots"
+        type: boolean
+        default: false
+
+# Screenshots only when agreed: manual run with the option, or "[screenshots]"
+# in the commit message. Otherwise the job builds the .prg/.iq only.
+env:
+  SCREENSHOTS: ${{ github.event.inputs.screenshots == 'true' || contains(github.event.head_commit.message, '[screenshots]') }}
 
 jobs:
   build:
@@ -65,6 +75,7 @@ jobs:
           done
           monkeyc -f monkey.jungle -e -o bin/PowerZonesSS.iq -y developer_key.der
           # Screenshot builds with sample data (not part of the download)
+          [ "$SCREENSHOTS" = "true" ] || exit 0
           for m in 1 2 3; do
             info "$m"
             for d in edge530 edge540 edge830 edge840 edge1040 edge1050; do
@@ -81,6 +92,7 @@ jobs:
             bin/*.iq
 
       - name: Simulator screenshots
+        if: env.SCREENSHOTS == 'true'
         continue-on-error: true
         run: |
           sudo apt-get update -qq
@@ -90,6 +102,7 @@ jobs:
           tail -5 shots/simulator.log || true
 
       - name: Publish screenshots to the screenshots branch
+        if: env.SCREENSHOTS == 'true'
         continue-on-error: true
         run: |
           cd shots
