@@ -1,4 +1,4 @@
-# Modifiche della build 22
+# Modifiche della build 23 (implementate)
 
 1. Frecce della zona attiva 17 × 8 px (+20%).
 2. Percentuale più a sinistra (margine destro ~13 px), non tocca le frecce.
