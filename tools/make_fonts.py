@@ -21,7 +21,7 @@ FONTS = {
     # zone percentages
     "reg14": (REGULAR, 14, "0123456789% "),
     # cell labels: NP AVG W 3s SS Z4+ % 3s
-    "reg16": (REGULAR, 16, "NPAVGWSZs+%0123456789 -"),
+    "lbl14": (REGULAR, 14, "NPAVGWSZs+%0123456789 -"),
 }
 
 

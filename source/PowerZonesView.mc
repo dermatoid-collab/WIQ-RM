@@ -81,11 +81,11 @@ class PowerZonesView extends WatchUi.DataField {
     var mBoldSmall;
     // Regular bitmap fonts: zone percentages (PCT_CAP) and cell labels (LABEL_CAP)
     const PCT_CAP = 14;
-    const LABEL_CAP = 16;
+    const LABEL_CAP = 14;
     var mPctFont;
     var mLabelFont;
     // Current-zone marker: arrow half-height/depth, frame line widths
-    const ARROW = 8;
+    const ARROW = 9;
     const FRAME_H = 3;
     const FRAME_V = 2;
     var mFonts = [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL, Graphics.FONT_TINY, Graphics.FONT_XTINY];
@@ -114,7 +114,7 @@ class PowerZonesView extends WatchUi.DataField {
         mBold = WatchUi.loadResource(Rez.Fonts.Bold20);
         mBoldSmall = WatchUi.loadResource(Rez.Fonts.Bold17);
         mPctFont = WatchUi.loadResource(Rez.Fonts.Reg14);
-        mLabelFont = WatchUi.loadResource(Rez.Fonts.Reg16);
+        mLabelFont = WatchUi.loadResource(Rez.Fonts.Lbl14);
 
         resetTotals();
         loadSettings();
