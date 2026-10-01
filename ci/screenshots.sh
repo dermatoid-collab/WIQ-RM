@@ -1,7 +1,7 @@
 #!/bin/bash
 # Runs inside xvfb-run: starts the Connect IQ simulator, loads each demo
 # build and saves a screenshot of the whole virtual screen.
-# Demo 1/2: sample data (edge830, edge840); demo 3: font calibration (all devices).
+# Demo 1/2: sample data (edge830, edge840).
 set -u
 mkdir -p shots
 "$SDK_BIN/simulator" > shots/simulator.log 2>&1 &
@@ -30,9 +30,6 @@ shot() {
 for d in edge830 edge840; do
   shot $d 1
   shot $d 2
-done
-for d in edge530 edge540 edge830 edge840 edge1040 edge1050; do
-  shot $d 3
 done
 kill $SIM 2>/dev/null
 ls shots

@@ -76,9 +76,10 @@ jobs:
           monkeyc -f monkey.jungle -e -o bin/PowerZonesSS.iq -y developer_key.der
           # Screenshot builds with sample data (not part of the download)
           [ "$SCREENSHOTS" = "true" ] || exit 0
-          for m in 1 2 3; do
+          # (DEMO_MODE 3 = font calibration screen, only needed for new devices)
+          for m in 1 2; do
             info "$m"
-            for d in edge530 edge540 edge830 edge840 edge1040 edge1050; do
+            for d in edge830 edge840; do
               monkeyc -f monkey.jungle -d "$d" -o "demo/demo${m}_$d.prg" -y developer_key.der
             done
           done

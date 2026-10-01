@@ -1,15 +1,9 @@
-# Modifiche della build 21 (implementate)
+# Modifiche della build 22
 
-Stato attuale: build 20, approvata su Edge 830.
-
-1. **Secondo set di caselle** (quello che compare con il tap):
-   - casella centrale: **Z4** → **Z4+** (tempo Z4+Z5+Z6+Z7, evidenziata in arancio
-     quando si è in Z4 o sopra);
-   - casella di destra: **Z4+** → **Pot. 3s**, identica a quella del primo set
-     (colore della zona attuale, opzione %FTP dal menu).
-
-   Risultato:
-   - primo set (all'avvio): **NP / Media / Pot. 3s**
-   - secondo set (tap): **SS / Z4+ / Pot. 3s**
-
-   Il tempo in Z4 resta visibile nella riga Z4 e continua a essere salvato nel file FIT.
+1. Frecce della zona attiva 17 × 8 px (+20%).
+2. Percentuale più a sinistra (margine destro ~13 px), non tocca le frecce.
+3. Zx, tempo e intervallo ~6 px più a destra, oltre la freccia sinistra.
+4. Percentuale: font normale generato, cifre 14 px (+20%), uguale su 830/840.
+5. Etichette celle: font normale generato 16 px (+20%), sempre 3 px dal bordo
+   superiore; testi fissi NP | AVG | W 3s e SS | Z4+ | W 3s ("% 3s" con l'opzione %FTP).
+6. Riquadro zona attiva: linee orizzontali 3 px, verticali 2 px.

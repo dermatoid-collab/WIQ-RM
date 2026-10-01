@@ -1,7 +1,9 @@
 """Generate the bold bitmap fonts (BMFont text format) used by the data field.
 
 The Edge 830 has no bold text font, so the zone labels ("Z3") and the
-numbers (zone times, cell values) use these fonts. Glyphs are rendered
+numbers (zone times, cell values) use the bold fonts; zone percentages and
+cell labels use regular fonts with exact sizes (the system fonts only come
+in a few sizes). Glyphs are rendered
 without anti-aliasing and the vertical metrics are tight: the top of the
 capitals/digits is 1 px below the draw position, so layouts are exact.
 
@@ -9,27 +11,34 @@ Usage: python3 tools/make_fonts.py   (needs Pillow)
 """
 from PIL import Image, ImageDraw, ImageFont
 
-TTF = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
-CHARS = "Z0123456789:%- "
+BOLD = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+REGULAR = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
 OUT = "resources/fonts"
-# resource id -> height of capitals/digits in pixels
-FONTS = {"bold20": 20, "bold17": 17}
+# resource id -> (ttf, height of capitals/digits in pixels, characters)
+FONTS = {
+    "bold20": (BOLD, 20, "Z0123456789:%- "),
+    "bold17": (BOLD, 17, "Z0123456789:%- "),
+    # zone percentages
+    "reg14": (REGULAR, 14, "0123456789% "),
+    # cell labels: NP AVG W 3s SS Z4+ % 3s
+    "reg16": (REGULAR, 16, "NPAVGWSZs+%0123456789 -"),
+}
 
 
-def font_for_cap(cap):
+def font_for_cap(ttf, cap):
     size = cap
     while True:
-        f = ImageFont.truetype(TTF, size)
+        f = ImageFont.truetype(ttf, size)
         if -f.getbbox("Z", anchor="ls")[1] >= cap:
             return f
         size += 1
 
 
-def make(name, cap):
-    f = font_for_cap(cap)
+def make(name, ttf, cap, chars):
+    f = font_for_cap(ttf, cap)
     base = cap + 1
     glyphs = []
-    for ch in CHARS:
+    for ch in chars:
         l, t, r, b = f.getbbox(ch, anchor="ls")
         adv = round(f.getlength(ch))
         glyphs.append((ch, l, t, r, b, adv))
@@ -68,5 +77,5 @@ def make(name, cap):
           "width 88:88 =", sum(round(f.getlength(c)) for c in "88:88"))
 
 
-for n, c in FONTS.items():
-    make(n, c)
+for n, (t, c, ch) in FONTS.items():
+    make(n, t, c, ch)

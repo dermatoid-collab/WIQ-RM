@@ -79,6 +79,15 @@ class PowerZonesView extends WatchUi.DataField {
     const BOLD_SMALL_CAP = 17;
     var mBold;
     var mBoldSmall;
+    // Regular bitmap fonts: zone percentages (PCT_CAP) and cell labels (LABEL_CAP)
+    const PCT_CAP = 14;
+    const LABEL_CAP = 16;
+    var mPctFont;
+    var mLabelFont;
+    // Current-zone marker: arrow half-height/depth, frame line widths
+    const ARROW = 8;
+    const FRAME_H = 3;
+    const FRAME_V = 2;
     var mFonts = [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL, Graphics.FONT_TINY, Graphics.FONT_XTINY];
 
     var mStrNp;
@@ -104,6 +113,8 @@ class PowerZonesView extends WatchUi.DataField {
 
         mBold = WatchUi.loadResource(Rez.Fonts.Bold20);
         mBoldSmall = WatchUi.loadResource(Rez.Fonts.Bold17);
+        mPctFont = WatchUi.loadResource(Rez.Fonts.Reg14);
+        mLabelFont = WatchUi.loadResource(Rez.Fonts.Reg16);
 
         resetTotals();
         loadSettings();
@@ -485,9 +496,9 @@ class PowerZonesView extends WatchUi.DataField {
         return true;
     }
 
-    // Cell: 3 px + label (SMALL) + 5 px + value (bold) + 5 px
+    // Cell: 3 px + label + 5 px + value (bold) + 5 px
     function cellHeight(dc) {
-        return 3 + fontCap(dc, fontForCap(dc, 13)) + 5 + BOLD_CAP + 5;
+        return 3 + LABEL_CAP + 5 + BOLD_CAP + 5;
     }
 
     function drawZoneRow(dc, z, x, y, w, rh) {
@@ -512,8 +523,9 @@ class PowerZonesView extends WatchUi.DataField {
         var timeStr = ms > 0 ? fmtTime(ms) : "";
         var pctStr = mTotalMs > 0 ? (frac * 100 + 0.5).toNumber().toString() + "%" : "";
         var range = rangeText(z);
-        var tx = x + STRIPE_W + 6;
-        var right = x + w - 8;
+        // clear of the current-zone arrows (ARROW px deep) on both sides
+        var tx = x + 1 + ARROW + 9;
+        var right = x + w - 2 - ARROW - 5;
 
         // Two lines, like the reference field:
         //   "Z3   12:34"   bold, capitals BOLD_CAP px (BOLD_SMALL_CAP if the row is short)
@@ -540,13 +552,12 @@ class PowerZonesView extends WatchUi.DataField {
         }
         drawBase(dc, tx, smallBase, sf, range, Graphics.TEXT_JUSTIFY_LEFT);
 
-        var pf = fontForCap(dc, 12);
-        var pctBase = y + (rh + fontCap(dc, pf)) / 2;
+        var pctTop = y + (rh - PCT_CAP) / 2;
         if (pctStr.length() > 0) {
-            drawBase(dc, right, pctBase, pf, pctStr, Graphics.TEXT_JUSTIFY_RIGHT);
+            drawBold(dc, right, pctTop, mPctFont, pctStr, Graphics.TEXT_JUSTIFY_RIGHT);
         } else if (z == 6) {
             // Before the first second of data, show which build is installed
-            drawBase(dc, right, pctBase, sf, "build " + BUILD_NUMBER, Graphics.TEXT_JUSTIFY_RIGHT);
+            drawBase(dc, right, pctTop + PCT_CAP, sf, "build " + BUILD_NUMBER, Graphics.TEXT_JUSTIFY_RIGHT);
         }
 
         if (z == mCurZone) {
@@ -559,9 +570,11 @@ class PowerZonesView extends WatchUi.DataField {
     // (Z1 starts at 0 W, Z7 ends at 200% FTP; outside the arrows stay at the edge).
     function drawCurrentMarker(dc, z, x, y, w, rh) {
         dc.setColor(mFg, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(2);
-        dc.drawRectangle(x + 1, y + 1, w - 2, rh - 1);
-        dc.setPenWidth(1);
+        // frame: horizontal lines FRAME_H px, vertical lines FRAME_V px
+        dc.fillRectangle(x + 1, y, w - 2, FRAME_H);
+        dc.fillRectangle(x + 1, y + rh - FRAME_H, w - 2, FRAME_H);
+        dc.fillRectangle(x + 1, y, FRAME_V, rh);
+        dc.fillRectangle(x + w - 1 - FRAME_V, y, FRAME_V, rh);
 
         var lo = (z == 0) ? 0 : mZoneMaxW[z - 1] + 1;
         var hi = (z == 6) ? (mFtp * 2) : mZoneMaxW[z];
@@ -574,12 +587,12 @@ class PowerZonesView extends WatchUi.DataField {
                 f = 1.0;
             }
         }
-        var a = rh / 4;
-        if (a > 7) {
-            a = 7;
+        var a = ARROW;
+        if (a > rh / 3) {
+            a = rh / 3;
         }
-        var top = y + 2 + a;
-        var bottom = y + rh - 1 - a;
+        var top = y + FRAME_H + a;
+        var bottom = y + rh - 1 - FRAME_H - a;
         var cy = bottom - ((bottom - top) * f).toNumber();
         dc.fillPolygon([[x + 1, cy - a], [x + 1 + a, cy], [x + 1, cy + a]]);
         dc.fillPolygon([[x + w - 2, cy - a], [x + w - 2 - a, cy], [x + w - 2, cy + a]]);
@@ -588,23 +601,22 @@ class PowerZonesView extends WatchUi.DataField {
     // Second set (tap): SS / Z4+ / Pwr 3s
     function drawSummary(dc, x, y, w, h) {
         var cw = w / 3;
-        var ssLabel = (cw > 110) ? mStrSs : mStrSsShort;
-        drawCell(dc, x, y, cw, h, ssLabel, fmtCellTime(mSsMs), mInSs ? COLOR_SS : null);
-        drawCell(dc, x + cw, y, cw, h, mStrZ4Plus, fmtCellTime(z4PlusMs()), mCurZone >= 3 ? COLOR_Z4PLUS : null);
+        drawCell(dc, x, y, cw, h, "SS", fmtCellTime(mSsMs), mInSs ? COLOR_SS : null);
+        drawCell(dc, x + cw, y, cw, h, "Z4+", fmtCellTime(z4PlusMs()), mCurZone >= 3 ? COLOR_Z4PLUS : null);
         drawPowerCell(dc, x + 2 * cw, y, w - 2 * cw, h);
     }
 
     function drawFooter(dc, x, y, w, h) {
         var cw = w / 3;
-        drawCell(dc, x, y, cw, h, mStrNp, mNp != null ? mNp.toString() : "--", null);
-        drawCell(dc, x + cw, y, cw, h, mStrAvg, mAvgPower != null ? mAvgPower.toString() : "--", null);
+        drawCell(dc, x, y, cw, h, "NP", mNp != null ? mNp.toString() : "--", null);
+        drawCell(dc, x + cw, y, cw, h, "AVG", mAvgPower != null ? mAvgPower.toString() : "--", null);
 
         drawPowerCell(dc, x + 2 * cw, y, w - 2 * cw, h);
     }
 
     // Smoothed power (or %FTP), coloured like the current zone; used by both sets
     function drawPowerCell(dc, x, y, cw, h) {
-        var label = (mLastFieldPct ? mStrFtp : mStrPower) + " " + mAvgN.toString() + "s";
+        var label = (mLastFieldPct ? "%" : "W") + " " + mAvgN.toString() + "s";
         var val = "--";
         if (mDispPower != null) {
             val = mLastFieldPct
@@ -624,15 +636,8 @@ class PowerZonesView extends WatchUi.DataField {
         var cx = x + cw / 2;
         dc.setColor(fg, Graphics.COLOR_TRANSPARENT);
 
-        // Label: capitals ~13 px (smaller if it does not fit), 3 px from the top
-        var lf = fontForCap(dc, 13);
-        if (dc.getTextWidthInPixels(label, lf) > cw - 4) {
-            lf = Graphics.FONT_TINY;
-            if (dc.getTextWidthInPixels(label, lf) > cw - 4) {
-                lf = Graphics.FONT_XTINY;
-            }
-        }
-        drawBase(dc, cx, y + 3 + fontCap(dc, lf), lf, label, Graphics.TEXT_JUSTIFY_CENTER);
+        // Label: regular LABEL_CAP px font, capitals 3 px from the top
+        drawBold(dc, cx, y + 3, mLabelFont, label, Graphics.TEXT_JUSTIFY_CENTER);
 
         // Value: same bold font in every cell; only a value that does not fit
         // (e.g. more than 100 minutes) uses the slightly smaller one
