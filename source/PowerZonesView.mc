@@ -548,7 +548,16 @@ class PowerZonesView extends WatchUi.DataField {
         dc.setColor(mFg, Graphics.COLOR_TRANSPARENT);
         drawBold(dc, tx, topY, bf, label, Graphics.TEXT_JUSTIFY_LEFT);
         if (timeStr.length() > 0) {
-            drawBold(dc, tx + dc.getTextWidthInPixels(label, bf) + 14, topY, bf, timeStr, Graphics.TEXT_JUSTIFY_LEFT);
+            // keep clear of the percentage: long times (> 1 h) may need the smaller bold font
+            var timeX = tx + dc.getTextWidthInPixels(label, bf) + 14;
+            var maxRight = right - dc.getTextWidthInPixels("100%", mPctFont) - 8;
+            var tf = bf;
+            var tTop = topY;
+            if (timeX + dc.getTextWidthInPixels(timeStr, tf) > maxRight) {
+                tf = mBoldSmall;
+                tTop = topY + (cap - BOLD_SMALL_CAP);
+            }
+            drawBold(dc, timeX, tTop, tf, timeStr, Graphics.TEXT_JUSTIFY_LEFT);
         }
         drawBase(dc, tx, smallBase, sf, range, Graphics.TEXT_JUSTIFY_LEFT);
 
