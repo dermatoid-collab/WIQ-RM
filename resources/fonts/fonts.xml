@@ -2,7 +2,7 @@
     <fonts>
         <font id="Bold20" filename="bold20.fnt" antialias="false"/>
         <font id="Bold17" filename="bold17.fnt" antialias="false"/>
-        <font id="Reg14" filename="reg14.fnt" antialias="false"/>
+        <font id="Pct14" filename="pct14.fnt" antialias="false"/>
         <font id="Lbl14" filename="lbl14.fnt" antialias="false"/>
     </fonts>
 </resources>

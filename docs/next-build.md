@@ -1,9 +1,8 @@
-# Modifiche della build 23 (implementate)
+# Modifiche della build 26 (implementate)
 
-1. Frecce della zona attiva 17 × 8 px (+20%).
-2. Percentuale più a sinistra (margine destro ~13 px), non tocca le frecce.
-3. Zx, tempo e intervallo ~6 px più a destra, oltre la freccia sinistra.
-4. Percentuale: font normale generato, cifre 14 px (+20%), uguale su 830/840.
-5. Etichette celle: font normale generato 16 px (+20%), sempre 3 px dal bordo
-   superiore; testi fissi NP | AVG | W 3s e SS | Z4+ | W 3s ("% 3s" con l'opzione %FTP).
-6. Riquadro zona attiva: linee orizzontali 3 px, verticali 2 px.
+1. Percentuali delle zone ed etichette delle 3+3 celle in grassetto (font generati 14 px).
+2. Celle SS e Z4+ mai colorate: quella attiva ha lo stesso riquadro della zona attiva
+   (linee orizzontali 3 px, verticali 2 px). La cella W 3s resta colorata come la zona.
+3. 0 W escluso dalla Z1: a 0 W non cresce nessun tempo di zona né il totale su cui si
+   calcolano le percentuali; nessuna zona evidenziata. Z1 mostrata come "1 - 162W".
+   NP continua a includere gli 0 W (definizione standard).

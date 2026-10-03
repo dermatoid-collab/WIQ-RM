@@ -1,9 +1,9 @@
 """Generate the bold bitmap fonts (BMFont text format) used by the data field.
 
 The Edge 830 has no bold text font, so the zone labels ("Z3") and the
-numbers (zone times, cell values) use the bold fonts; zone percentages and
-cell labels use regular fonts with exact sizes (the system fonts only come
-in a few sizes). Glyphs are rendered
+numbers (zone times, cell values), the zone percentages and the cell labels
+use these bold fonts with exact sizes (the system fonts only come in a few
+sizes). Glyphs are rendered
 without anti-aliasing and the vertical metrics are tight: the top of the
 capitals/digits is 1 px below the draw position, so layouts are exact.
 
@@ -19,9 +19,9 @@ FONTS = {
     "bold20": (BOLD, 20, "Z0123456789:%- "),
     "bold17": (BOLD, 17, "Z0123456789:%- "),
     # zone percentages
-    "reg14": (REGULAR, 14, "0123456789% "),
+    "pct14": (BOLD, 14, "0123456789% "),
     # cell labels: NP AVG W 3s SS Z4+ % 3s
-    "lbl14": (REGULAR, 14, "NPAVGWSZs+%0123456789 -"),
+    "lbl14": (BOLD, 14, "NPAVGWSZs+%0123456789 -"),
 }
 
 

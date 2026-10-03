@@ -79,7 +79,7 @@ class PowerZonesView extends WatchUi.DataField {
     const BOLD_SMALL_CAP = 17;
     var mBold;
     var mBoldSmall;
-    // Regular bitmap fonts: zone percentages (PCT_CAP) and cell labels (LABEL_CAP)
+    // Bold bitmap fonts: zone percentages (PCT_CAP) and cell labels (LABEL_CAP)
     const PCT_CAP = 14;
     const LABEL_CAP = 14;
     var mPctFont;
@@ -113,7 +113,7 @@ class PowerZonesView extends WatchUi.DataField {
 
         mBold = WatchUi.loadResource(Rez.Fonts.Bold20);
         mBoldSmall = WatchUi.loadResource(Rez.Fonts.Bold17);
-        mPctFont = WatchUi.loadResource(Rez.Fonts.Reg14);
+        mPctFont = WatchUi.loadResource(Rez.Fonts.Pct14);
         mLabelFont = WatchUi.loadResource(Rez.Fonts.Lbl14);
 
         resetTotals();
@@ -245,7 +245,7 @@ class PowerZonesView extends WatchUi.DataField {
                 sum += mSamples[i];
             }
             mDispPower = (sum.toFloat() / mSampleCount + 0.5).toNumber();
-            mCurZone = zoneOf(mDispPower);
+            mCurZone = (mDispPower > 0) ? zoneOf(mDispPower) : -1;
             mInSs = isSs(mDispPower);
         } else {
             mSampleCount = 0;
@@ -267,11 +267,16 @@ class PowerZonesView extends WatchUi.DataField {
             if (dt < 0) {
                 resetTotals();
             } else if (dt > 0 && dt <= 5000 && p != null) {
-                var z = zoneOf(p);
-                mZoneMs[z] += dt;
-                mTotalMs += dt;
-                if (isSs(p)) {
-                    mSsMs += dt;
+                // 0 W (coasting) is not time in any zone, so it does not count
+                // in the zone times or in the total the percentages refer to;
+                // NP still includes it, as in the standard definition
+                if (p > 0) {
+                    var z = zoneOf(p);
+                    mZoneMs[z] += dt;
+                    mTotalMs += dt;
+                    if (isSs(p)) {
+                        mSsMs += dt;
+                    }
                 }
                 addNpSample(p);
                 updateFit();
@@ -355,7 +360,7 @@ class PowerZonesView extends WatchUi.DataField {
         var a = mRangePct ? mZoneMaxPct : mZoneMaxW;
         var u = mRangePct ? "%" : "W";
         if (z == 0) {
-            return "0 - " + a[0].toString() + u;
+            return (mRangePct ? "0" : "1") + " - " + a[0].toString() + u;
         } else if (z == 6) {
             return "> " + a[5].toString() + u;
         }
@@ -578,14 +583,9 @@ class PowerZonesView extends WatchUi.DataField {
     // power inside the zone: bottom = lower limit, top = upper limit
     // (Z1 starts at 0 W, Z7 ends at 200% FTP; outside the arrows stay at the edge).
     function drawCurrentMarker(dc, z, x, y, w, rh) {
-        dc.setColor(mFg, Graphics.COLOR_TRANSPARENT);
-        // frame: horizontal lines FRAME_H px, vertical lines FRAME_V px
-        dc.fillRectangle(x + 1, y, w - 2, FRAME_H);
-        dc.fillRectangle(x + 1, y + rh - FRAME_H, w - 2, FRAME_H);
-        dc.fillRectangle(x + 1, y, FRAME_V, rh);
-        dc.fillRectangle(x + w - 1 - FRAME_V, y, FRAME_V, rh);
+        drawFrame(dc, x + 1, y, w - 2, rh);
 
-        var lo = (z == 0) ? 0 : mZoneMaxW[z - 1] + 1;
+        var lo = (z == 0) ? 1 : mZoneMaxW[z - 1] + 1;
         var hi = (z == 6) ? (mFtp * 2) : mZoneMaxW[z];
         var f = 0.5;
         if (mDispPower != null && hi > lo) {
@@ -607,11 +607,28 @@ class PowerZonesView extends WatchUi.DataField {
         dc.fillPolygon([[x + w - 2, cy - a], [x + w - 2 - a, cy], [x + w - 2, cy + a]]);
     }
 
+    // Frame of the current zone / active cell: horizontal lines FRAME_H px,
+    // vertical lines FRAME_V px, drawn inside the given rectangle
+    function drawFrame(dc, x, y, w, h) {
+        dc.setColor(mFg, Graphics.COLOR_TRANSPARENT);
+        dc.fillRectangle(x, y, w, FRAME_H);
+        dc.fillRectangle(x, y + h - FRAME_H, w, FRAME_H);
+        dc.fillRectangle(x, y, FRAME_V, h);
+        dc.fillRectangle(x + w - FRAME_V, y, FRAME_V, h);
+    }
+
     // Second set (tap): SS / Z4+ / Pwr 3s
     function drawSummary(dc, x, y, w, h) {
         var cw = w / 3;
-        drawCell(dc, x, y, cw, h, "SS", fmtCellTime(mSsMs), mInSs ? COLOR_SS : null);
-        drawCell(dc, x + cw, y, cw, h, "Z4+", fmtCellTime(z4PlusMs()), mCurZone >= 3 ? COLOR_Z4PLUS : null);
+        // never filled: the active one gets the same frame as the current zone
+        drawCell(dc, x, y, cw, h, "SS", fmtCellTime(mSsMs), null);
+        if (mInSs) {
+            drawFrame(dc, x, y, cw, h);
+        }
+        drawCell(dc, x + cw, y, cw, h, "Z4+", fmtCellTime(z4PlusMs()), null);
+        if (mCurZone >= 3) {
+            drawFrame(dc, x + cw, y, cw, h);
+        }
         drawPowerCell(dc, x + 2 * cw, y, w - 2 * cw, h);
     }
 
